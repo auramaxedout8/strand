@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Strand — Haircut Directives & Reference Photo | Organic Salon Finder</title>
+  <meta name="description" content="A minimalist app for finding salons where barbers strictly understand customer haircut directives and reference photos. 100% organic verified reviews." />
+
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#f7f4ef" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Strand" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23f7f4ef'/%3E%3Ccircle cx='54' cy='18' r='3.5' fill='%23211f1c'/%3E%3Cpath d='M 54 18 C 42 25, 36 40, 44 52 C 51 64, 57 71, 52 82 C 50 87, 45 90, 40 92' stroke='%23211f1c' stroke-width='5.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
+
+  <!-- Google Fonts: Plus Jakarta Sans & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif']
+          },
+          colors: {
+            beige: {
+              50: '#faf8f5',
+              100: '#f7f4ef',
+              200: '#eee7dc',
+              300: '#e3d7c5',
+              400: '#cca985',
+              700: '#695d4d',
+              800: '#463e33',
+              900: '#26221c'
+            },
+            espresso: '#211f1c'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet CSS & JS for Minimalist Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- App Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-beige-100 text-stone-900 min-h-screen flex flex-col antialiased selection:bg-stone-300">
+
+  <!-- Minimalist Top Navigation -->
+  <header class="sticky top-0 z-40 minimal-header px-5 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between">
+    <!-- Logo: A hair strand forming a slight curve of S (not a proper S) -->
+    <a href="#" class="flex items-center gap-2.5 group">
+      <div class="w-8 h-8 flex items-center justify-center">
+        <!-- SVG: Natural Hair Strand with a Slight S-Wave Curve -->
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-stone-900 group-hover:text-stone-700 transition-colors">
+          <!-- Root Follicle Dot -->
+          <circle cx="21" cy="5" r="1.3" fill="currentColor"/>
+          <!-- Delicate organic hair strand swaying in a subtle gentle S-curve (not a rigid S) -->
+          <path d="M 21 5 C 16 8, 13 14, 15 19 C 17.5 24, 21 27, 20 31 C 19 33.5, 17 35, 15 36" 
+                stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="font-sans font-bold text-xl tracking-tight text-stone-900">STRAND</span>
+        <span class="text-[11px] text-stone-400 font-normal hidden sm:inline">&bull; Hair Directives & Photo</span>
+      </div>
+    </a>
+
+    <!-- Location Pill -->
+    <div class="hidden lg:flex items-center gap-2 bg-white border border-stone-200/80 rounded-full px-3.5 py-1.5 text-xs text-stone-600 shadow-sm">
+      <span class="text-stone-400 text-sm">📍</span>
+      <select onchange="window.StrandApp.setLocation(this.value)" class="bg-transparent text-stone-800 font-medium focus:outline-none cursor-pointer">
+        <option value="soho">SoHo, Lower Manhattan</option>
+        <option value="midtown">Midtown, Manhattan</option>
+        <option value="tribeca">Tribeca, Downtown</option>
+        <option value="brooklyn">Brooklyn Heights</option>
+      </select>
+      <button onclick="window.StrandApp.useCurrentDeviceLocation()" title="Use GPS" class="ml-1 text-[11px] text-stone-500 hover:text-stone-900 font-medium">
+        GPS
+      </button>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2 sm:gap-2.5">
+      <!-- PWA Install Button (Appears when installable) -->
+      <button id="pwa-install-btn" onclick="window.StrandApp.installApp()" class="hidden px-3 py-1.5 rounded-full border border-stone-300 text-stone-800 text-xs font-medium hover:bg-stone-50 transition flex items-center gap-1.5 shadow-sm">
+        <span>📲</span>
+        <span class="hidden sm:inline">Install App</span>
+      </button>
+
+      <!-- Directive Shortcut -->
+      <button onclick="window.StrandApp.openDemandCardViewModal()" class="px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 text-xs font-medium transition shadow-sm flex items-center gap-1.5">
+        <span>📋</span>
+        <span class="hidden sm:inline">My Directive</span>
+      </button>
+
+      <!-- Bookings -->
+      <button onclick="window.StrandApp.openBookingsModal()" class="relative px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 text-xs font-medium transition shadow-sm flex items-center gap-1.5">
+        <span>📅</span>
+        <span class="hidden sm:inline">Bookings</span>
+        <span id="bookings-count-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-stone-900 text-white font-bold text-[9px] flex items-center justify-center">0</span>
+      </button>
+
+      <!-- Customize Directive & Upload Photo -->
+      <button onclick="window.StrandApp.openDemandBuilderModal()" class="px-3.5 py-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium transition shadow-sm flex items-center gap-1.5">
+        <span>📷</span>
+        <span class="hidden sm:inline">Haircut Photo & Directive</span>
+        <span class="sm:hidden">Photo & Directive</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-5 sm:px-8 lg:px-10 py-8 space-y-7">
+
+    <!-- Calm Minimalist Headline -->
+    <section class="max-w-2xl space-y-2">
+      <h1 class="text-3xl sm:text-4xl font-serif text-stone-900 font-normal tracking-tight">
+        Salons that listen. <span class="italic text-stone-600">Reviews that are organic.</span>
+      </h1>
+      <p class="text-xs sm:text-sm text-stone-500 leading-relaxed font-light">
+        Attach a reference photo of the exact cut you want. Barbers review your directives before shears touch your hair. 100% organic verified reviews.
+      </p>
+    </section>
+
+    <!-- Active Strand Directive Banner (Minimalist Linen Card with Reference Photo) -->
+    <section id="demand-banner-container" aria-label="Haircut Directive Banner">
+      <!-- Injected dynamically by app.js -->
+    </section>
+
+    <!-- Minimalist Filter Bar -->
+    <section class="bg-white border border-stone-200/90 rounded-2xl p-4 shadow-sm space-y-3" aria-label="Filters">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <!-- Search Input -->
+        <div class="md:col-span-6 relative">
+          <span class="absolute left-3.5 top-2.5 text-stone-400 text-xs">🔍</span>
+          <input type="text" id="search-input" placeholder="Search salons, barbers, or styles (fade, curls, scissor, beard)..." class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-400 transition" />
+        </div>
+
+        <!-- Radius Slider -->
+        <div class="md:col-span-3 bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-1.5 flex items-center justify-between gap-3">
+          <span class="text-xs text-stone-500 font-medium whitespace-nowrap">Radius: <strong id="distance-value" class="text-stone-900">5 mi</strong></span>
+          <input type="range" id="distance-slider" min="0.5" max="10" step="0.5" value="5" class="w-full cursor-pointer" />
+        </div>
+
+        <!-- Sort Select -->
+        <div class="md:col-span-3">
+          <select id="sort-select" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none">
+            <option value="demandScore">Highest Listening Score</option>
+            <option value="distance">Closest to Me</option>
+            <option value="rating">Top Organic Rating</option>
+            <option value="reviews">Most Reviews</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Hair Texture Pills -->
+      <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-stone-100 text-xs">
+        <span class="text-[11px] font-medium text-stone-400 mr-2 uppercase tracking-wide">Hair Texture:</span>
+        <button data-hairtype="all" class="hair-filter-pill px-3 py-1 rounded-full text-xs font-semibold bg-stone-900 text-white transition">
+          All
+        </button>
+        <button data-hairtype="straight" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+          Straight (1)
+        </button>
+        <button data-hairtype="wavy" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+          Wavy (2)
+        </button>
+        <button data-hairtype="curly" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+          Curly (3)
+        </button>
+        <button data-hairtype="coily" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+          Coily (4)
+        </button>
+      </div>
+    </section>
+
+    <!-- Main Layout: Clean Split (Map + Salon List) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- Left Column: Minimalist Light Map (5 Cols) -->
+      <aside class="lg:col-span-5 sticky top-24 space-y-3">
+        <div class="bg-white border border-stone-200/90 rounded-2xl p-3 shadow-sm overflow-hidden">
+          <div class="flex items-center justify-between pb-2 px-1 text-xs">
+            <span class="font-medium text-stone-700">Near You Map</span>
+            <button onclick="window.StrandApp.useCurrentDeviceLocation()" class="text-stone-500 hover:text-stone-900 text-[11px]">Center GPS</button>
+          </div>
+          <!-- Leaflet Map -->
+          <div id="salons-map" class="h-72 sm:h-80 w-full rounded-xl overflow-hidden border border-stone-100"></div>
+          <div class="mt-2 px-1 text-[11px] text-stone-400 flex items-center justify-between">
+            <span>● Black dot: your location</span>
+            <span>✂ Pins: Listening score</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Column: Minimalist Salon Directory (7 Cols) -->
+      <section class="lg:col-span-7 space-y-4">
+        <!-- Results Counter -->
+        <div class="flex items-center justify-between px-1">
+          <h2 id="results-count" class="text-sm font-medium text-stone-600">Salons Near You</h2>
+          <button onclick="window.StrandApp.openDemandBuilderModal()" class="text-xs text-stone-500 hover:text-stone-900 font-medium">
+            Edit Directives & Reference Photo &rarr;
+          </button>
+        </div>
+
+        <!-- Salon Cards List -->
+        <div id="salons-list" class="space-y-4">
+          <!-- Dynamically populated by app.js -->
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Minimalist Footer -->
+  <footer class="mt-20 border-t border-stone-200 bg-beige-100 py-10 px-6 lg:px-12 text-xs text-stone-500">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-stone-900">
+          <circle cx="21" cy="5" r="1.3" fill="currentColor"/>
+          <path d="M 21 5 C 16 8, 13 14, 15 19 C 17.5 24, 21 27, 20 31 C 19 33.5, 17 35, 15 36" 
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="font-bold text-stone-900">STRAND</span>
+        <span class="text-stone-400">&bull;</span>
+        <span>Minimalist Barber & Salon Intelligence</span>
+      </div>
+
+      <div class="flex items-center gap-4 text-[11px]">
+        <span>100% Organic Reviews</span>
+        <span>&bull;</span>
+        <span>Haircut Photo Attached</span>
+        <span>&bull;</span>
+        <span>Directives Honored</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Salon Details Modal -->
+  <div id="salon-details-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
+      <div id="salon-details-content">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Demand Builder Modal (Includes Photo Upload) -->
+  <div id="demand-builder-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
+      <div id="demand-builder-content">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. View Demand Card Modal -->
+  <div id="demand-card-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl relative">
+      <div id="demand-card-content">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Booking Modal -->
+  <div id="booking-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
+      <div id="booking-modal-content">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Review Modal -->
+  <div id="review-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
+      <div id="review-modal-content">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Bookings Modal -->
+  <div id="bookings-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl p-6 relative">
+      <div class="flex items-center justify-between pb-4 border-b border-stone-100">
+        <div>
+          <h3 class="font-semibold text-stone-900">My Appointments</h3>
+          <p class="text-xs text-stone-400">Scheduled cuts with attached directives</p>
+        </div>
+        <button onclick="window.StrandApp.closeModal('bookings-modal')" class="text-stone-400 hover:text-stone-800 text-lg">✕</button>
+      </div>
+
+      <div id="bookings-list-content" class="mt-4 space-y-3">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

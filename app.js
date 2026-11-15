@@ -5,10 +5,12 @@
 
   // State Management
   let salons = [];
+  let userName = null;
   let userLocation = {
     lat: 40.7230,
     lng: -73.9980,
-    name: "SoHo, Lower Manhattan"
+    name: "SoHo, Lower Manhattan",
+    isLiveGps: false
   };
   let activeDemandCard = null;
   let activeFilter = {
@@ -45,10 +47,31 @@
     renderAll();
     setupEventListeners();
     setupPwaInstallation();
+
+    // If first-time user without saved name, prompt welcome modal
+    if (!userName) {
+      setTimeout(() => {
+        openWelcomeModal();
+      }, 500);
+    }
   }
 
   // LocalStorage loader
   function loadStoredData() {
+    // User name
+    userName = localStorage.getItem('strand_userName') || null;
+
+    // User location
+    const storedLoc = localStorage.getItem('strand_userLocation');
+    if (storedLoc) {
+      try {
+        userLocation = JSON.parse(storedLoc);
+      } catch (e) {
+        userLocation = { lat: 40.7230, lng: -73.9980, name: "SoHo, Lower Manhattan", isLiveGps: false };
+      }
+    }
+
+    // Salons
     const storedSalons = localStorage.getItem('strand_salons');
     if (storedSalons) {
       try {
@@ -60,6 +83,7 @@
       salons = JSON.parse(JSON.stringify(INITIAL_SALONS));
     }
 
+    // Active Hair Directive
     const storedDemand = localStorage.getItem('strand_activeDemand');
     if (storedDemand) {
       try {
@@ -74,7 +98,7 @@
 
   function getDefaultDemandCard() {
     return {
-      clientName: "Julian Vance",
+      clientName: userName || "Julian",
       hairType: "Curly (3B)",
       targetStyle: "Low Taper Fade + Preserved Curls",
       maxCutOffTop: "Max 0.5 inch (Clean split ends only)",
@@ -115,6 +139,159 @@
     const googleMapsLink = document.getElementById('active-google-maps-link');
     if (googleMapsLink) {
       googleMapsLink.href = `https://www.google.com/maps/search/barbershop+near+me/@${userLocation.lat},${userLocation.lng},14z`;
+    }
+
+    const navExternalLink = document.getElementById('nav-external-gmaps-link');
+    if (navExternalLink) {
+      navExternalLink.href = `https://www.google.com/maps/search/barbershop+near+me/@${userLocation.lat},${userLocation.lng},14z`;
+    }
+  }
+
+  // Welcome / Onboarding Modal
+  function openWelcomeModal() {
+    const modal = document.getElementById('welcome-modal');
+    if (!modal) return;
+
+    const nameInput = document.getElementById('welcome-name-input');
+    if (nameInput && userName) {
+      nameInput.value = userName;
+    }
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function detectLiveLocationInModal() {
+    const btnText = document.getElementById('welcome-gps-btn-text');
+    if (btnText) btnText.textContent = "Requesting GPS permission...";
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userLocation = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            name: "Your Live Location",
+            isLiveGps: true
+          };
+          localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+
+          if (btnText) btnText.textContent = "✓ Live GPS Coordinates Detected!";
+          showToast("Live GPS coordinates detected!");
+
+          // Try reverse geocoding to get neighborhood name
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.address) {
+                const city = data.address.city || data.address.town || data.address.suburb || data.address.neighbourhood || "Nearby";
+                userLocation.name = `${city} (Live GPS)`;
+                localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+                if (btnText) btnText.textContent = `✓ ${userLocation.name}`;
+                updateNavigationLocationUI();
+                renderPersonalizedGreeting();
+              }
+            })
+            .catch(() => {});
+        },
+        err => {
+          if (btnText) btnText.textContent = "GPS Denied / Unavailable (Pick an Area)";
+          showToast("Could not access GPS. Please choose a neighborhood.");
+        },
+        { timeout: 8000 }
+      );
+    } else {
+      if (btnText) btnText.textContent = "GPS Not Supported";
+    }
+  }
+
+  function handleWelcomeLocationSelect(areaKey) {
+    const areas = {
+      soho: { lat: 40.7248, lng: -73.9991, name: "SoHo, Lower Manhattan", isLiveGps: false },
+      midtown: { lat: 40.7580, lng: -73.9855, name: "Midtown, Manhattan", isLiveGps: false },
+      tribeca: { lat: 40.7163, lng: -74.0086, name: "Tribeca, Downtown", isLiveGps: false },
+      brooklyn: { lat: 40.6925, lng: -73.9904, name: "Brooklyn Heights", isLiveGps: false }
+    };
+
+    if (areas[areaKey]) {
+      userLocation = areas[areaKey];
+      localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+      const btnText = document.getElementById('welcome-gps-btn-text');
+      if (btnText) btnText.textContent = "Detect My Live GPS Location";
+    }
+  }
+
+  function handleWelcomeSubmit(e) {
+    e.preventDefault();
+    const nameInput = document.getElementById('welcome-name-input');
+    if (nameInput && nameInput.value.trim() !== "") {
+      userName = nameInput.value.trim();
+      localStorage.setItem('strand_userName', userName);
+      if (activeDemandCard && (!activeDemandCard.clientName || activeDemandCard.clientName === "Julian Vance")) {
+        activeDemandCard.clientName = userName;
+        localStorage.setItem('strand_activeDemand', JSON.stringify(activeDemandCard));
+      }
+    }
+
+    closeModal('welcome-modal');
+    updateSalonDistances();
+    renderAll();
+
+    if (map) {
+      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
+    }
+
+    showToast(`Welcome, ${userName || 'friend'}! Salons ranked for ${userLocation.name}.`);
+  }
+
+  function getTimeGreeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  }
+
+  // Render Personalized Greeting Banner
+  function renderPersonalizedGreeting() {
+    const greetingSection = document.getElementById('personalized-greeting-section');
+    if (!greetingSection) return;
+
+    const timeGreeting = getTimeGreeting();
+    const displayName = userName ? userName : "there";
+    const locName = userLocation.name || "your area";
+
+    // Count salons within 2 miles
+    const nearbyCount = salons.filter(s => s.distanceMiles <= 2.0).length;
+
+    greetingSection.innerHTML = `
+      <div class="space-y-1.5">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full badge-warm text-xs font-semibold">
+            <span>👋</span> <span>${timeGreeting}, ${displayName}</span>
+          </span>
+          <span class="text-xs text-stone-500 font-medium">📍 ${locName}</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-serif text-stone-900 font-normal tracking-tight">
+          Salons near you that <span class="italic text-stone-600">actually understand your haircut demands.</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-stone-500 leading-relaxed font-light">
+          We found <strong class="text-stone-800 font-semibold">${nearbyCount} vetted salons</strong> within 2 miles of your location that audit consultations and honor reference photos.
+        </p>
+      </div>
+    `;
+
+    updateNavigationLocationUI();
+  }
+
+  function updateNavigationLocationUI() {
+    const navUser = document.getElementById('nav-user-greeting');
+    const navLoc = document.getElementById('nav-location-label');
+
+    if (navUser) {
+      navUser.textContent = userName ? `Hi, ${userName}` : "Set Profile";
+    }
+    if (navLoc) {
+      navLoc.textContent = userLocation.isLiveGps ? `📍 Live GPS` : userLocation.name.split(',')[0];
     }
   }
 
@@ -158,7 +335,7 @@
     });
 
     L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
-      .bindPopup(`<div class="font-medium text-stone-900 text-xs">You are here</div><div class="text-[11px] text-stone-500">${userLocation.name}</div>`)
+      .bindPopup(`<div class="font-medium text-stone-900 text-xs">${userName ? userName + "'s" : "Your"} Live Location</div><div class="text-[11px] text-stone-500">${userLocation.name}</div>`)
       .addTo(markersLayer);
 
     // Salon Pins
@@ -184,14 +361,14 @@
       const popupHtml = `
         <div class="p-1 max-w-[210px] space-y-1">
           <div class="font-semibold text-stone-900 text-xs leading-snug">${salon.name}</div>
-          <div class="text-[11px] text-stone-500">📍 ${salon.distanceMiles} mi &bull; ${salon.neighborhood}</div>
+          <div class="text-[11px] text-stone-500">📍 ${salon.distanceMiles} mi away from you</div>
           <div class="text-[11px] text-emerald-800 font-medium">★ ${salon.organicRating} (${salon.organicReviewCount} reviews)</div>
           <div class="pt-1 flex gap-1">
             <button onclick="window.StrandApp.openSalonDetails('${salon.id}')" class="flex-1 py-1 text-[11px] bg-stone-900 text-white font-medium rounded-lg">
               Details
             </button>
             <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="py-1 px-2 text-[11px] border border-stone-200 text-stone-700 font-medium rounded-lg hover:bg-stone-50">
-              🧭 Maps &nearr;
+              🧭 Directions &nearr;
             </a>
           </div>
         </div>
@@ -204,7 +381,6 @@
   // Filter Logic
   function getFilteredSalons() {
     return salons.filter(salon => {
-      // Specialty or recommended filter
       if (activeFilter.specialty === "recommended" && !salon.isRecommended) {
         return false;
       }
@@ -221,7 +397,6 @@
         if (!matchesScissor) return false;
       }
 
-      // Search Query
       if (activeFilter.searchQuery.trim() !== "") {
         const q = activeFilter.searchQuery.toLowerCase();
         const matchesName = salon.name.toLowerCase().includes(q);
@@ -233,12 +408,10 @@
         }
       }
 
-      // Distance limit
       if (salon.distanceMiles > activeFilter.maxDistance) {
         return false;
       }
 
-      // Hair type compatibility
       if (activeFilter.hairType !== "all") {
         const matchesHair = salon.hairTypeCompatibilities.some(h => h.toLowerCase().includes(activeFilter.hairType.toLowerCase()));
         if (!matchesHair) return false;
@@ -261,6 +434,7 @@
 
   // Render All
   function renderAll() {
+    renderPersonalizedGreeting();
     renderDemandBanner();
     renderRecommendationsSpotlight();
     renderSalons();
@@ -268,12 +442,24 @@
     renderBookingsList();
   }
 
-  // Render Curated Recommendations Spotlight
+  // Render Curated Recommendations Spotlight (Personalized by location)
   function renderRecommendationsSpotlight() {
     const container = document.getElementById('recommendations-spotlight');
+    const heading = document.getElementById('recommendations-heading');
+    const context = document.getElementById('recommendations-distance-context');
     if (!container) return;
 
-    const recommendedSalons = salons.filter(s => s.isRecommended);
+    if (heading && userName) {
+      heading.textContent = `Recommended for ${userName}`;
+    }
+    if (context) {
+      context.textContent = `Ranked by proximity to ${userLocation.name.split(',')[0]}`;
+    }
+
+    // Sort recommended salons by distance to the user's location
+    const recommendedSalons = salons
+      .filter(s => s.isRecommended)
+      .sort((a, b) => a.distanceMiles - b.distanceMiles);
 
     container.innerHTML = recommendedSalons.map(salon => {
       return `
@@ -284,6 +470,11 @@
               <div class="absolute top-2 left-2">
                 <span class="px-2 py-0.5 rounded-full bg-stone-900/80 backdrop-blur-sm text-white text-[10px] font-bold">
                   ${salon.demandUnderstandingScore}% Listens
+                </span>
+              </div>
+              <div class="absolute bottom-2 right-2">
+                <span class="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-stone-800 text-[10px] font-semibold">
+                  📍 ${salon.distanceMiles} mi away
                 </span>
               </div>
             </div>
@@ -383,7 +574,7 @@
     `;
   }
 
-  // Minimalist Salon Cards with Google Maps & Recommendation Tags
+  // Minimalist Salon Cards with Google Maps & Proximity Highlights
   function renderSalons() {
     const listContainer = document.getElementById('salons-list');
     const countBadge = document.getElementById('results-count');
@@ -408,6 +599,8 @@
     }
 
     listContainer.innerHTML = filtered.map(salon => {
+      const isVeryClose = salon.distanceMiles <= 0.8;
+
       return `
         <article class="minimal-card p-5 overflow-hidden flex flex-col sm:flex-row gap-5 items-start">
           <div class="w-full sm:w-44 h-44 shrink-0 rounded-xl overflow-hidden bg-stone-100">
@@ -417,13 +610,18 @@
           <div class="flex-1 space-y-2.5 w-full">
             <div class="flex items-start justify-between gap-2">
               <div>
-                ${salon.isRecommended ? `
-                  <div class="mb-1">
+                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                  ${salon.isRecommended ? `
                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold badge-warm">
                       <span>⭐</span> <span>${salon.recommendationCategory || "Recommended"}</span>
                     </span>
-                  </div>
-                ` : ''}
+                  ` : ''}
+                  ${isVeryClose ? `
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                      <span>📍</span> <span>Right near you (${salon.distanceMiles} mi)</span>
+                    </span>
+                  ` : ''}
+                </div>
                 <h3 class="font-serif text-lg font-medium text-stone-900 leading-snug">
                   ${salon.name}
                 </h3>
@@ -502,7 +700,7 @@
                 ⭐ ${salon.recommendationCategory || "Strand Top Pick"}
               </span>
             ` : ''}
-            <span class="text-xs text-stone-400 font-medium block">${salon.neighborhood} &bull; ${salon.distanceMiles} mi away</span>
+            <span class="text-xs text-stone-400 font-medium block">${salon.neighborhood} &bull; ${salon.distanceMiles} mi away from ${userLocation.name.split(',')[0]}</span>
             <h2 class="text-2xl font-serif text-stone-900 mt-1">${salon.name}</h2>
             <p class="text-xs text-stone-500 mt-0.5 italic font-serif">"${salon.tagline}"</p>
           </div>
@@ -603,7 +801,7 @@
         <!-- Footer -->
         <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
           <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="text-xs text-stone-600 hover:text-stone-900 flex items-center gap-1 font-medium">
-            <span>🧭 Get Google Maps Directions</span> &nearr;
+            <span>🧭 Get Directions</span> &nearr;
           </a>
           <button onclick="window.StrandApp.openBookingModal('${salon.id}', '${salon.barbers[0].id}')" class="px-4 py-2 bg-stone-900 text-white rounded-lg text-xs font-medium hover:bg-stone-800 transition">
             Book Appointment
@@ -679,7 +877,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-stone-700 mb-1">Your Name</label>
-              <input type="text" id="booking-client-name" value="${activeDemandCard ? activeDemandCard.clientName : ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none" required />
+              <input type="text" id="booking-client-name" value="${activeDemandCard ? activeDemandCard.clientName : (userName || '')}" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none" required />
             </div>
             <div>
               <label class="block text-xs font-medium text-stone-700 mb-1">Phone</label>
@@ -800,7 +998,7 @@
           <div class="grid grid-cols-2 gap-3 pt-1">
             <div>
               <label class="block text-xs font-medium text-stone-700 mb-1">Your Name</label>
-              <input type="text" id="demand-name" value="${card.clientName}" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none" required />
+              <input type="text" id="demand-name" value="${card.clientName || (userName || '')}" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none" required />
             </div>
             <div>
               <label class="block text-xs font-medium text-stone-700 mb-1">Hair Texture</label>
@@ -942,7 +1140,7 @@
     showToast("Haircut directive & reference photo saved.");
   }
 
-  // View Demand Card Modal (Clean Printable Card for Barber)
+  // View Demand Card Modal
   function openDemandCardViewModal() {
     const modal = document.getElementById('demand-card-modal');
     const content = document.getElementById('demand-card-content');
@@ -1055,7 +1253,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-stone-700 mb-1">Your Name</label>
-              <input type="text" id="review-author" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none" required />
+              <input type="text" id="review-author" value="${userName || ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 focus:outline-none" required />
             </div>
             <div>
               <label class="block text-xs font-medium text-stone-700 mb-1">Barber</label>
@@ -1189,42 +1387,51 @@
 
   // Location selector
   function setLocation(locKey) {
-    const locations = {
-      soho: { lat: 40.7248, lng: -73.9991, name: "SoHo, Lower Manhattan" },
-      midtown: { lat: 40.7580, lng: -73.9855, name: "Midtown, Manhattan" },
-      tribeca: { lat: 40.7163, lng: -74.0086, name: "Tribeca, Downtown" },
-      brooklyn: { lat: 40.6925, lng: -73.9904, name: "Brooklyn Heights" }
-    };
-
-    if (locations[locKey]) {
-      userLocation = locations[locKey];
-      updateSalonDistances();
-      renderAll();
-      if (map) {
-        map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1 });
-      }
-      showToast(`Location set to ${userLocation.name}`);
+    handleWelcomeLocationSelect(locKey);
+    updateSalonDistances();
+    renderAll();
+    if (map) {
+      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1 });
     }
+    showToast(`Location set to ${userLocation.name}`);
   }
 
   function useCurrentDeviceLocation() {
     if ("geolocation" in navigator) {
-      showToast("Detecting GPS...");
+      showToast("Detecting live GPS...");
       navigator.geolocation.getCurrentPosition(
         pos => {
           userLocation = {
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
-            name: "GPS Location"
+            name: "Live GPS Location",
+            isLiveGps: true
           };
+          localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+
+          // Try reverse geocoding
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.address) {
+                const city = data.address.city || data.address.town || data.address.suburb || data.address.neighbourhood || "Nearby";
+                userLocation.name = `${city} (Live GPS)`;
+                localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+                renderPersonalizedGreeting();
+                updateSalonDistances();
+                renderAll();
+              }
+            })
+            .catch(() => {});
+
           updateSalonDistances();
           renderAll();
           if (map) {
             map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1 });
           }
-          showToast("Location updated from GPS.");
+          showToast("Live GPS location refreshed!");
         },
-        () => showToast("Could not access GPS coordinates."),
+        () => showToast("Could not access live GPS."),
         { timeout: 7000 }
       );
     }
@@ -1354,6 +1561,10 @@
   // Export
   window.StrandApp = {
     init,
+    openWelcomeModal,
+    detectLiveLocationInModal,
+    handleWelcomeLocationSelect,
+    handleWelcomeSubmit,
     openSalonDetails,
     openBookingModal,
     handleBookingSubmit,

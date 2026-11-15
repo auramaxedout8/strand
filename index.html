@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Strand — Haircut Directives & Reference Photo | Organic Salon Finder</title>
-  <meta name="description" content="A minimalist app for finding salons where barbers strictly understand customer haircut directives and reference photos. Connected to Google Maps with 100% organic verified reviews." />
+  <title>Strand — Haircut Directives & Live Location Salon Finder</title>
+  <meta name="description" content="A minimalist app for finding salons where barbers strictly understand customer haircut directives and reference photos. Connected to Google Maps with live location suggestions." />
 
   <!-- PWA & Mobile Web App Meta Tags -->
   <link rel="manifest" href="manifest.json" />
@@ -60,7 +60,7 @@
 <body class="bg-beige-100 text-stone-900 min-h-screen flex flex-col antialiased selection:bg-stone-300">
 
   <!-- Minimalist Top Navigation -->
-  <header class="sticky top-0 z-40 minimal-header px-5 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between">
+  <header class="sticky top-0 z-40 minimal-header px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between">
     <!-- Logo: A hair strand forming a slight curve of S (not a proper S) -->
     <a href="#" class="flex items-center gap-2.5 group">
       <div class="w-8 h-8 flex items-center justify-center">
@@ -72,22 +72,17 @@
       </div>
       <div class="flex items-baseline gap-2">
         <span class="font-sans font-bold text-xl tracking-tight text-stone-900">STRAND</span>
-        <span class="text-[11px] text-stone-400 font-normal hidden sm:inline">&bull; Connected to Google Maps</span>
+        <span class="text-[11px] text-stone-400 font-normal hidden sm:inline">&bull; Hair Directives & Photo</span>
       </div>
     </a>
 
-    <!-- Location Pill -->
-    <div class="hidden lg:flex items-center gap-2 bg-white border border-stone-200/80 rounded-full px-3.5 py-1.5 text-xs text-stone-600 shadow-sm">
-      <span class="text-stone-400 text-sm">📍</span>
-      <select onchange="window.StrandApp.setLocation(this.value)" class="bg-transparent text-stone-800 font-medium focus:outline-none cursor-pointer">
-        <option value="soho">SoHo, Lower Manhattan</option>
-        <option value="midtown">Midtown, Manhattan</option>
-        <option value="tribeca">Tribeca, Downtown</option>
-        <option value="brooklyn">Brooklyn Heights</option>
-      </select>
-      <button onclick="window.StrandApp.useCurrentDeviceLocation()" title="Use GPS" class="ml-1 text-[11px] text-stone-500 hover:text-stone-900 font-medium">
-        GPS
-      </button>
+    <!-- Personalized User & Location Pill (Clickable to change) -->
+    <div onclick="window.StrandApp.openWelcomeModal()" class="cursor-pointer flex items-center gap-2 bg-white border border-stone-200/90 hover:border-stone-400 rounded-full px-3.5 py-1.5 text-xs text-stone-700 shadow-sm transition">
+      <span class="text-stone-400 text-xs">📍</span>
+      <span id="nav-user-greeting" class="font-medium text-stone-900">Set Location</span>
+      <span class="text-stone-300">&bull;</span>
+      <span id="nav-location-label" class="text-stone-500 font-normal">Detecting GPS...</span>
+      <span class="text-[10px] text-stone-400">✏️</span>
     </div>
 
     <!-- Actions -->
@@ -114,23 +109,18 @@
       <!-- Customize Directive & Upload Photo -->
       <button onclick="window.StrandApp.openDemandBuilderModal()" class="px-3.5 py-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium transition shadow-sm flex items-center gap-1.5">
         <span>📷</span>
-        <span class="hidden sm:inline">Haircut Photo & Directive</span>
-        <span class="sm:hidden">Photo & Directive</span>
+        <span class="hidden sm:inline">Photo & Directive</span>
+        <span class="sm:hidden">Photo</span>
       </button>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-5 sm:px-8 lg:px-10 py-8 space-y-7">
+  <main class="flex-1 max-w-6xl w-full mx-auto px-5 sm:px-8 lg:px-10 py-7 space-y-7">
 
-    <!-- Calm Minimalist Headline -->
-    <section class="max-w-2xl space-y-2">
-      <h1 class="text-3xl sm:text-4xl font-serif text-stone-900 font-normal tracking-tight">
-        Salons that listen. <span class="italic text-stone-600">Reviews that are organic.</span>
-      </h1>
-      <p class="text-xs sm:text-sm text-stone-500 leading-relaxed font-light">
-        Attach a reference photo of the exact haircut you want. Directly integrated with Google Maps directions. 100% organic verified reviews.
-      </p>
+    <!-- Personalized Greeting & Headline Banner -->
+    <section id="personalized-greeting-section" class="max-w-2xl space-y-2">
+      <!-- Dynamically rendered by app.js: e.g. "Good afternoon, Alex 👋 Salons near Lower Manhattan that listen." -->
     </section>
 
     <!-- Active Strand Directive Banner -->
@@ -143,10 +133,10 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-amber-700 text-xs">⭐</span>
-          <h2 class="font-serif text-base font-medium text-stone-900">Curated Salon Recommendations</h2>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-warm uppercase tracking-wider">Top Vetted</span>
+          <h2 id="recommendations-heading" class="font-serif text-base font-medium text-stone-900">Recommended for You</h2>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-warm uppercase tracking-wider">Live Match</span>
         </div>
-        <span class="text-xs text-stone-400">Audited Consultation Protocol</span>
+        <span id="recommendations-distance-context" class="text-xs text-stone-400">Closest verified barbers</span>
       </div>
 
       <div id="recommendations-spotlight" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -173,7 +163,7 @@
         <div class="md:col-span-3">
           <select id="sort-select" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none">
             <option value="demandScore">Highest Listening Score</option>
-            <option value="distance">Closest to Me</option>
+            <option value="distance">Closest to My Location</option>
             <option value="rating">Top Organic Rating</option>
             <option value="reviews">Most Reviews</option>
           </select>
@@ -202,7 +192,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <a href="https://www.google.com/maps/search/hair+salon+near+me" target="_blank" rel="noopener noreferrer" class="text-stone-500 hover:text-stone-900 text-xs flex items-center gap-1 font-medium transition">
+          <a id="nav-external-gmaps-link" href="https://www.google.com/maps/search/hair+salon+near+me" target="_blank" rel="noopener noreferrer" class="text-stone-500 hover:text-stone-900 text-xs flex items-center gap-1 font-medium transition">
             <span>🗺️ Google Maps Search</span>
             <span class="text-[10px]">&nearr;</span>
           </a>
@@ -219,7 +209,7 @@
           <div class="flex items-center justify-between pb-2 px-1 text-xs">
             <span class="font-medium text-stone-700">Near You Map</span>
             <div class="flex items-center gap-2">
-              <button onclick="window.StrandApp.useCurrentDeviceLocation()" class="text-stone-500 hover:text-stone-900 text-[11px]">Center GPS</button>
+              <button onclick="window.StrandApp.useCurrentDeviceLocation()" class="text-stone-500 hover:text-stone-900 text-[11px] font-medium">📍 Refresh GPS</button>
               <span class="text-stone-300">&bull;</span>
               <a id="active-google-maps-link" href="https://www.google.com/maps/search/barbershop+near+me/@40.7230,-73.9980,14z" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 text-[11px] flex items-center gap-0.5">
                 <span>Google Maps View</span> &nearr;
@@ -229,7 +219,7 @@
           <!-- Leaflet Map -->
           <div id="salons-map" class="h-72 sm:h-80 w-full rounded-xl overflow-hidden border border-stone-100"></div>
           <div class="mt-2 px-1 text-[11px] text-stone-400 flex items-center justify-between">
-            <span>● Black dot: your location</span>
+            <span id="map-user-pin-label">● Black dot: your live location</span>
             <span>✂ Pins: Listening score</span>
           </div>
         </div>
@@ -266,11 +256,11 @@
         </svg>
         <span class="font-bold text-stone-900">STRAND</span>
         <span class="text-stone-400">&bull;</span>
-        <span>Google Maps Connected &bull; Organic Reviews</span>
+        <span>Personalized Salon Intelligence &bull; Google Maps Connected</span>
       </div>
 
       <div class="flex items-center gap-4 text-[11px]">
-        <span>Google Maps Directions</span>
+        <span>Live Location Matching</span>
         <span>&bull;</span>
         <span>Haircut Photo Attached</span>
         <span>&bull;</span>
@@ -280,6 +270,66 @@
   </footer>
 
   <!-- ==================== MODALS ==================== -->
+
+  <!-- 0. WELCOME / ONBOARDING MODAL: Asks for Name & Live Location -->
+  <div id="welcome-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-md overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl p-6 sm:p-7 relative">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+        <div class="flex items-center gap-2.5">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-stone-900">
+            <circle cx="21" cy="5" r="1.3" fill="currentColor"/>
+            <path d="M 21 5 C 16 8, 13 14, 15 19 C 17.5 24, 21 27, 20 31 C 19 33.5, 17 35, 15 36" 
+                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h3 class="font-serif text-lg font-medium text-stone-900">Welcome to Strand</h3>
+        </div>
+        <button onclick="window.StrandApp.closeModal('welcome-modal')" class="text-stone-400 hover:text-stone-800 text-lg">✕</button>
+      </div>
+
+      <p class="text-xs text-stone-500 mt-2.5 leading-relaxed">
+        Tell us who you are and share your live location so we can greet you and recommend vetted salons right near you that actually listen.
+      </p>
+
+      <form id="welcome-form" onsubmit="window.StrandApp.handleWelcomeSubmit(event)" class="space-y-4 mt-5">
+        <!-- Name Input -->
+        <div>
+          <label class="block text-xs font-semibold text-stone-700 mb-1">What is your name?</label>
+          <input type="text" id="welcome-name-input" placeholder="e.g. Alex, Jordan, Sarah..." class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-500 transition" required />
+        </div>
+
+        <!-- Live Location Section -->
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-stone-700 mb-0.5">Your Location</label>
+          
+          <!-- Instant GPS Button -->
+          <button type="button" onclick="window.StrandApp.detectLiveLocationInModal()" class="w-full py-2.5 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-medium border border-stone-200 transition flex items-center justify-center gap-2">
+            <span>📍</span>
+            <span id="welcome-gps-btn-text">Detect My Live GPS Location</span>
+          </button>
+
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-stone-200"></div>
+            <span class="flex-shrink mx-2 text-[10px] text-stone-400 uppercase tracking-wider">or pick an area</span>
+            <div class="flex-grow border-t border-stone-200"></div>
+          </div>
+
+          <!-- Manual Area Picker -->
+          <select id="welcome-location-select" onchange="window.StrandApp.handleWelcomeLocationSelect(this.value)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none">
+            <option value="soho">SoHo / Lower Manhattan</option>
+            <option value="midtown">Midtown Manhattan</option>
+            <option value="tribeca">Tribeca / Financial District</option>
+            <option value="brooklyn">Brooklyn Heights / DUMBO</option>
+          </select>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-medium transition shadow-md">
+            Show Salons Near Me &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- 1. Salon Details Modal -->
   <div id="salon-details-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">

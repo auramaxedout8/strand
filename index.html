@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Strand — Haircut Directives & Reference Photo | Organic Salon Finder</title>
-  <meta name="description" content="A minimalist app for finding salons where barbers strictly understand customer haircut directives and reference photos. 100% organic verified reviews." />
+  <meta name="description" content="A minimalist app for finding salons where barbers strictly understand customer haircut directives and reference photos. Connected to Google Maps with 100% organic verified reviews." />
 
   <!-- PWA & Mobile Web App Meta Tags -->
   <link rel="manifest" href="manifest.json" />
@@ -64,18 +64,15 @@
     <!-- Logo: A hair strand forming a slight curve of S (not a proper S) -->
     <a href="#" class="flex items-center gap-2.5 group">
       <div class="w-8 h-8 flex items-center justify-center">
-        <!-- SVG: Natural Hair Strand with a Slight S-Wave Curve -->
         <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-stone-900 group-hover:text-stone-700 transition-colors">
-          <!-- Root Follicle Dot -->
           <circle cx="21" cy="5" r="1.3" fill="currentColor"/>
-          <!-- Delicate organic hair strand swaying in a subtle gentle S-curve (not a rigid S) -->
           <path d="M 21 5 C 16 8, 13 14, 15 19 C 17.5 24, 21 27, 20 31 C 19 33.5, 17 35, 15 36" 
                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <div class="flex items-baseline gap-2">
         <span class="font-sans font-bold text-xl tracking-tight text-stone-900">STRAND</span>
-        <span class="text-[11px] text-stone-400 font-normal hidden sm:inline">&bull; Hair Directives & Photo</span>
+        <span class="text-[11px] text-stone-400 font-normal hidden sm:inline">&bull; Connected to Google Maps</span>
       </div>
     </a>
 
@@ -95,7 +92,7 @@
 
     <!-- Actions -->
     <div class="flex items-center gap-2 sm:gap-2.5">
-      <!-- PWA Install Button (Appears when installable) -->
+      <!-- PWA Install Button -->
       <button id="pwa-install-btn" onclick="window.StrandApp.installApp()" class="hidden px-3 py-1.5 rounded-full border border-stone-300 text-stone-800 text-xs font-medium hover:bg-stone-50 transition flex items-center gap-1.5 shadow-sm">
         <span>📲</span>
         <span class="hidden sm:inline">Install App</span>
@@ -132,13 +129,29 @@
         Salons that listen. <span class="italic text-stone-600">Reviews that are organic.</span>
       </h1>
       <p class="text-xs sm:text-sm text-stone-500 leading-relaxed font-light">
-        Attach a reference photo of the exact cut you want. Barbers review your directives before shears touch your hair. 100% organic verified reviews.
+        Attach a reference photo of the exact haircut you want. Directly integrated with Google Maps directions. 100% organic verified reviews.
       </p>
     </section>
 
-    <!-- Active Strand Directive Banner (Minimalist Linen Card with Reference Photo) -->
+    <!-- Active Strand Directive Banner -->
     <section id="demand-banner-container" aria-label="Haircut Directive Banner">
       <!-- Injected dynamically by app.js -->
+    </section>
+
+    <!-- Curated Top Picks / Recommendations Spotlight -->
+    <section class="space-y-3" aria-label="Strand Curated Recommendations">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-700 text-xs">⭐</span>
+          <h2 class="font-serif text-base font-medium text-stone-900">Curated Salon Recommendations</h2>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-warm uppercase tracking-wider">Top Vetted</span>
+        </div>
+        <span class="text-xs text-stone-400">Audited Consultation Protocol</span>
+      </div>
+
+      <div id="recommendations-spotlight" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Injected dynamically by app.js -->
+      </div>
     </section>
 
     <!-- Minimalist Filter Bar -->
@@ -167,36 +180,51 @@
         </div>
       </div>
 
-      <!-- Hair Texture Pills -->
-      <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-stone-100 text-xs">
-        <span class="text-[11px] font-medium text-stone-400 mr-2 uppercase tracking-wide">Hair Texture:</span>
-        <button data-hairtype="all" class="hair-filter-pill px-3 py-1 rounded-full text-xs font-semibold bg-stone-900 text-white transition">
-          All
-        </button>
-        <button data-hairtype="straight" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-          Straight (1)
-        </button>
-        <button data-hairtype="wavy" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-          Wavy (2)
-        </button>
-        <button data-hairtype="curly" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-          Curly (3)
-        </button>
-        <button data-hairtype="coily" class="hair-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-          Coily (4)
-        </button>
+      <!-- Quick Filter Pills: Recommendations, Hair Texture, Google Maps -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-100 text-xs">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[11px] font-medium text-stone-400 mr-1 uppercase tracking-wide">Filter:</span>
+          <button data-filter="all" onclick="window.StrandApp.setSpecialtyFilter('all')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs font-semibold bg-stone-900 text-white transition">
+            All Salons
+          </button>
+          <button data-filter="recommended" onclick="window.StrandApp.setSpecialtyFilter('recommended')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+            ⭐ Strand Top Picks
+          </button>
+          <button data-filter="fades" onclick="window.StrandApp.setSpecialtyFilter('fades')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+            Fade & Beard
+          </button>
+          <button data-filter="curls" onclick="window.StrandApp.setSpecialtyFilter('curls')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+            Curly & Textured
+          </button>
+          <button data-filter="scissor" onclick="window.StrandApp.setSpecialtyFilter('scissor')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+            Scissor & Wolf Cuts
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a href="https://www.google.com/maps/search/hair+salon+near+me" target="_blank" rel="noopener noreferrer" class="text-stone-500 hover:text-stone-900 text-xs flex items-center gap-1 font-medium transition">
+            <span>🗺️ Google Maps Search</span>
+            <span class="text-[10px]">&nearr;</span>
+          </a>
+        </div>
       </div>
     </section>
 
     <!-- Main Layout: Clean Split (Map + Salon List) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-      <!-- Left Column: Minimalist Light Map (5 Cols) -->
+      <!-- Left Column: Minimalist Light Map with Google Maps Bridge (5 Cols) -->
       <aside class="lg:col-span-5 sticky top-24 space-y-3">
         <div class="bg-white border border-stone-200/90 rounded-2xl p-3 shadow-sm overflow-hidden">
           <div class="flex items-center justify-between pb-2 px-1 text-xs">
             <span class="font-medium text-stone-700">Near You Map</span>
-            <button onclick="window.StrandApp.useCurrentDeviceLocation()" class="text-stone-500 hover:text-stone-900 text-[11px]">Center GPS</button>
+            <div class="flex items-center gap-2">
+              <button onclick="window.StrandApp.useCurrentDeviceLocation()" class="text-stone-500 hover:text-stone-900 text-[11px]">Center GPS</button>
+              <span class="text-stone-300">&bull;</span>
+              <a id="active-google-maps-link" href="https://www.google.com/maps/search/barbershop+near+me/@40.7230,-73.9980,14z" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 text-[11px] flex items-center gap-0.5">
+                <span>Google Maps View</span> &nearr;
+              </a>
+            </div>
           </div>
           <!-- Leaflet Map -->
           <div id="salons-map" class="h-72 sm:h-80 w-full rounded-xl overflow-hidden border border-stone-100"></div>
@@ -238,11 +266,11 @@
         </svg>
         <span class="font-bold text-stone-900">STRAND</span>
         <span class="text-stone-400">&bull;</span>
-        <span>Minimalist Barber & Salon Intelligence</span>
+        <span>Google Maps Connected &bull; Organic Reviews</span>
       </div>
 
       <div class="flex items-center gap-4 text-[11px]">
-        <span>100% Organic Reviews</span>
+        <span>Google Maps Directions</span>
         <span>&bull;</span>
         <span>Haircut Photo Attached</span>
         <span>&bull;</span>

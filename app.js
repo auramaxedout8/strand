@@ -15,6 +15,7 @@
     searchQuery: "",
     maxDistance: 5.0,
     hairType: "all",
+    specialty: "all", // 'all', 'recommended', 'fades', 'curls', 'scissor'
     sortBy: "demandScore"
   };
   let activeSalonModal = null;
@@ -103,7 +104,18 @@
         salon.lat,
         salon.lng
       );
+      if (!salon.googleDirectionsUrl) {
+        salon.googleDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${salon.lat},${salon.lng}`;
+      }
+      if (!salon.googleMapsUrl) {
+        salon.googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(salon.name + ' ' + salon.address)}`;
+      }
     });
+
+    const googleMapsLink = document.getElementById('active-google-maps-link');
+    if (googleMapsLink) {
+      googleMapsLink.href = `https://www.google.com/maps/search/barbershop+near+me/@${userLocation.lat},${userLocation.lng},14z`;
+    }
   }
 
   // Minimalist Leaflet Map
@@ -170,13 +182,18 @@
         .addTo(markersLayer);
 
       const popupHtml = `
-        <div class="p-1 max-w-[200px]">
+        <div class="p-1 max-w-[210px] space-y-1">
           <div class="font-semibold text-stone-900 text-xs leading-snug">${salon.name}</div>
-          <div class="text-[11px] text-stone-500 mt-1">📍 ${salon.distanceMiles} mi &bull; ${salon.neighborhood}</div>
-          <div class="text-[11px] text-emerald-800 font-medium mt-0.5">★ ${salon.organicRating} (${salon.organicReviewCount} reviews)</div>
-          <button onclick="window.StrandApp.openSalonDetails('${salon.id}')" class="mt-2 w-full py-1 text-xs bg-stone-900 text-white font-medium rounded-lg transition">
-            View Details
-          </button>
+          <div class="text-[11px] text-stone-500">📍 ${salon.distanceMiles} mi &bull; ${salon.neighborhood}</div>
+          <div class="text-[11px] text-emerald-800 font-medium">★ ${salon.organicRating} (${salon.organicReviewCount} reviews)</div>
+          <div class="pt-1 flex gap-1">
+            <button onclick="window.StrandApp.openSalonDetails('${salon.id}')" class="flex-1 py-1 text-[11px] bg-stone-900 text-white font-medium rounded-lg">
+              Details
+            </button>
+            <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="py-1 px-2 text-[11px] border border-stone-200 text-stone-700 font-medium rounded-lg hover:bg-stone-50">
+              🧭 Maps &nearr;
+            </a>
+          </div>
         </div>
       `;
 
@@ -187,6 +204,24 @@
   // Filter Logic
   function getFilteredSalons() {
     return salons.filter(salon => {
+      // Specialty or recommended filter
+      if (activeFilter.specialty === "recommended" && !salon.isRecommended) {
+        return false;
+      }
+      if (activeFilter.specialty === "fades") {
+        const matchesFade = salon.specialties.some(s => s.toLowerCase().includes("fade") || s.toLowerCase().includes("taper"));
+        if (!matchesFade) return false;
+      }
+      if (activeFilter.specialty === "curls") {
+        const matchesCurl = salon.hairTypeCompatibilities.some(h => h.toLowerCase().includes("curly") || h.toLowerCase().includes("coily"));
+        if (!matchesCurl) return false;
+      }
+      if (activeFilter.specialty === "scissor") {
+        const matchesScissor = salon.specialties.some(s => s.toLowerCase().includes("scissor") || s.toLowerCase().includes("shag"));
+        if (!matchesScissor) return false;
+      }
+
+      // Search Query
       if (activeFilter.searchQuery.trim() !== "") {
         const q = activeFilter.searchQuery.toLowerCase();
         const matchesName = salon.name.toLowerCase().includes(q);
@@ -198,10 +233,12 @@
         }
       }
 
+      // Distance limit
       if (salon.distanceMiles > activeFilter.maxDistance) {
         return false;
       }
 
+      // Hair type compatibility
       if (activeFilter.hairType !== "all") {
         const matchesHair = salon.hairTypeCompatibilities.some(h => h.toLowerCase().includes(activeFilter.hairType.toLowerCase()));
         if (!matchesHair) return false;
@@ -225,9 +262,56 @@
   // Render All
   function renderAll() {
     renderDemandBanner();
+    renderRecommendationsSpotlight();
     renderSalons();
     renderMapMarkers();
     renderBookingsList();
+  }
+
+  // Render Curated Recommendations Spotlight
+  function renderRecommendationsSpotlight() {
+    const container = document.getElementById('recommendations-spotlight');
+    if (!container) return;
+
+    const recommendedSalons = salons.filter(s => s.isRecommended);
+
+    container.innerHTML = recommendedSalons.map(salon => {
+      return `
+        <div class="bg-white border border-stone-200 rounded-2xl p-4 flex flex-col justify-between hover:border-stone-400 transition shadow-sm group">
+          <div class="space-y-2">
+            <div class="relative h-28 w-full rounded-xl overflow-hidden bg-stone-100 mb-2">
+              <img src="${salon.heroImage}" alt="${salon.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              <div class="absolute top-2 left-2">
+                <span class="px-2 py-0.5 rounded-full bg-stone-900/80 backdrop-blur-sm text-white text-[10px] font-bold">
+                  ${salon.demandUnderstandingScore}% Listens
+                </span>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">
+                ${salon.recommendationCategory || "Strand Top Pick"}
+              </span>
+              <h3 class="font-serif text-sm font-semibold text-stone-900 leading-snug">
+                ${salon.name}
+              </h3>
+              <p class="text-[11px] text-stone-500 line-clamp-2">
+                ${salon.recommendationReason || salon.tagline}
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-3 mt-2 border-t border-stone-100 flex items-center justify-between gap-2 text-xs">
+            <button onclick="window.StrandApp.openSalonDetails('${salon.id}')" class="text-stone-900 font-semibold hover:underline text-[11px]">
+              View Details &rarr;
+            </button>
+            <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 rounded-lg border border-stone-200 text-stone-600 hover:text-stone-900 text-[10px] font-medium flex items-center gap-1">
+              <span>🧭 Directions</span> &nearr;
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   // Minimalist Linen Directive Banner with Photo Preview
@@ -299,7 +383,7 @@
     `;
   }
 
-  // Minimalist Salon Cards
+  // Minimalist Salon Cards with Google Maps & Recommendation Tags
   function renderSalons() {
     const listContainer = document.getElementById('salons-list');
     const countBadge = document.getElementById('results-count');
@@ -313,8 +397,8 @@
     if (filtered.length === 0) {
       listContainer.innerHTML = `
         <div class="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-2">
-          <p class="text-sm font-medium text-stone-800">No salons found within this radius</p>
-          <p class="text-xs text-stone-500">Try expanding the distance slider or choosing another hair texture.</p>
+          <p class="text-sm font-medium text-stone-800">No salons found matching this filter</p>
+          <p class="text-xs text-stone-500">Try switching filters or expanding your radius slider.</p>
           <button onclick="window.StrandApp.resetFilters()" class="mt-2 text-xs font-medium text-stone-900 underline">
             Reset Filters
           </button>
@@ -326,13 +410,20 @@
     listContainer.innerHTML = filtered.map(salon => {
       return `
         <article class="minimal-card p-5 overflow-hidden flex flex-col sm:flex-row gap-5 items-start">
-          <div class="w-full sm:w-44 h-40 shrink-0 rounded-xl overflow-hidden bg-stone-100">
+          <div class="w-full sm:w-44 h-44 shrink-0 rounded-xl overflow-hidden bg-stone-100">
             <img src="${salon.heroImage}" alt="${salon.name}" class="w-full h-full object-cover" loading="lazy" />
           </div>
 
           <div class="flex-1 space-y-2.5 w-full">
             <div class="flex items-start justify-between gap-2">
               <div>
+                ${salon.isRecommended ? `
+                  <div class="mb-1">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold badge-warm">
+                      <span>⭐</span> <span>${salon.recommendationCategory || "Recommended"}</span>
+                    </span>
+                  </div>
+                ` : ''}
                 <h3 class="font-serif text-lg font-medium text-stone-900 leading-snug">
                   ${salon.name}
                 </h3>
@@ -360,6 +451,7 @@
               </span>
             </div>
 
+            <!-- Google Maps & Action Buttons -->
             <div class="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div class="flex items-center gap-2">
                 <img src="${salon.barbers[0].avatar}" alt="${salon.barbers[0].name}" class="w-6 h-6 rounded-full object-cover" />
@@ -368,12 +460,20 @@
                 <span class="text-stone-500 text-[11px]">${salon.barbers[0].specialty}</span>
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- Google Maps Link -->
+                <a href="${salon.googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-stone-50 font-medium transition text-xs flex items-center gap-1" title="View on Google Maps">
+                  <span>🗺️ Maps</span> &nearr;
+                </a>
+                <!-- Directions Link -->
+                <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-stone-50 font-medium transition text-xs flex items-center gap-1" title="Get Directions">
+                  <span>🧭 Directions</span> &nearr;
+                </a>
                 <button onclick="window.StrandApp.openSalonDetails('${salon.id}')" class="px-3 py-1.5 rounded-lg border border-stone-200 text-stone-700 hover:bg-stone-50 font-medium transition text-xs">
-                  Reviews & Barbers
+                  Reviews
                 </button>
                 <button onclick="window.StrandApp.openBookingModal('${salon.id}', '${salon.barbers[0].id}')" class="px-3.5 py-1.5 rounded-lg bg-stone-900 text-white hover:bg-stone-800 font-medium transition text-xs">
-                  Book with Directive
+                  Book
                 </button>
               </div>
             </div>
@@ -383,7 +483,7 @@
     }).join('');
   }
 
-  // Salon Details Modal
+  // Salon Details Modal with Direct Google Maps Integration
   function openSalonDetails(salonId) {
     const salon = salons.find(s => s.id === salonId);
     if (!salon) return;
@@ -397,13 +497,37 @@
       <div class="p-6 sm:p-8 space-y-6">
         <div class="flex items-start justify-between border-b border-stone-100 pb-4">
           <div>
-            <span class="text-xs text-stone-400 font-medium">${salon.neighborhood} &bull; ${salon.distanceMiles} mi away</span>
+            ${salon.isRecommended ? `
+              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold badge-warm mb-1">
+                ⭐ ${salon.recommendationCategory || "Strand Top Pick"}
+              </span>
+            ` : ''}
+            <span class="text-xs text-stone-400 font-medium block">${salon.neighborhood} &bull; ${salon.distanceMiles} mi away</span>
             <h2 class="text-2xl font-serif text-stone-900 mt-1">${salon.name}</h2>
             <p class="text-xs text-stone-500 mt-0.5 italic font-serif">"${salon.tagline}"</p>
           </div>
           <button onclick="window.StrandApp.closeModal('salon-details-modal')" class="text-stone-400 hover:text-stone-800 text-lg">✕</button>
         </div>
 
+        <!-- Google Maps Quick Action Bar -->
+        <div class="bg-stone-50 border border-stone-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div class="space-y-0.5">
+            <span class="font-medium text-stone-900 flex items-center gap-1.5">
+              <span>📍</span> <span>${salon.address}</span>
+            </span>
+            <span class="text-stone-500 text-[11px] block">Open today: ${salon.hours} &bull; Call: ${salon.phone}</span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <a href="${salon.googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-800 font-medium hover:bg-stone-50 transition flex items-center gap-1 shadow-sm">
+              <span>🗺️ Google Maps</span> &nearr;
+            </a>
+            <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800 transition flex items-center gap-1 shadow-sm">
+              <span>🧭 Directions</span> &nearr;
+            </a>
+          </div>
+        </div>
+
+        <!-- Listening Scorecard -->
         <div class="bg-stone-50 border border-stone-200 rounded-xl p-4">
           <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-semibold uppercase tracking-wider text-stone-700">Listening Scorecard</span>
@@ -428,6 +552,7 @@
           </p>
         </div>
 
+        <!-- Barbers -->
         <div>
           <h3 class="text-sm font-semibold text-stone-900 mb-3">Barbers</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -451,6 +576,7 @@
           </div>
         </div>
 
+        <!-- Reviews -->
         <div>
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-stone-900">Organic Reviews (${salon.organicReviewCount})</h3>
@@ -474,8 +600,11 @@
           </div>
         </div>
 
+        <!-- Footer -->
         <div class="pt-4 border-t border-stone-100 flex items-center justify-between">
-          <span class="text-xs text-stone-500">📍 ${salon.address}</span>
+          <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="text-xs text-stone-600 hover:text-stone-900 flex items-center gap-1 font-medium">
+            <span>🧭 Get Google Maps Directions</span> &nearr;
+          </a>
           <button onclick="window.StrandApp.openBookingModal('${salon.id}', '${salon.barbers[0].id}')" class="px-4 py-2 bg-stone-900 text-white rounded-lg text-xs font-medium hover:bg-stone-800 transition">
             Book Appointment
           </button>
@@ -834,7 +963,6 @@
         </div>
 
         ${hasPhoto ? `
-          <!-- Customer Reference Photo Showcase -->
           <div class="p-3.5 bg-stone-50 rounded-xl border border-stone-200/80">
             <span class="text-[10px] uppercase font-bold tracking-wider text-stone-500 block mb-2">📸 Customer Desired Cut Reference Photo:</span>
             <div class="flex flex-col sm:flex-row gap-4 items-center">
@@ -885,6 +1013,25 @@
 
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+  }
+
+  // Specialty Filter
+  function setSpecialtyFilter(specialtyKey) {
+    activeFilter.specialty = specialtyKey;
+
+    const pills = document.querySelectorAll('.specialty-filter-pill');
+    pills.forEach(pill => {
+      if (pill.dataset.filter === specialtyKey) {
+        pill.classList.remove('bg-stone-100', 'text-stone-600');
+        pill.classList.add('bg-stone-900', 'text-white', 'font-semibold');
+      } else {
+        pill.classList.remove('bg-stone-900', 'text-white', 'font-semibold');
+        pill.classList.add('bg-stone-100', 'text-stone-600');
+      }
+    });
+
+    renderSalons();
+    renderMapMarkers();
   }
 
   // Write Review Modal
@@ -1148,19 +1295,6 @@
       });
     }
 
-    const hairFilters = document.querySelectorAll('.hair-filter-pill');
-    hairFilters.forEach(pill => {
-      pill.addEventListener('click', () => {
-        hairFilters.forEach(p => p.classList.remove('bg-stone-900', 'text-white', 'font-semibold'));
-        hairFilters.forEach(p => p.classList.add('bg-stone-100', 'text-stone-600'));
-        pill.classList.remove('bg-stone-100', 'text-stone-600');
-        pill.classList.add('bg-stone-900', 'text-white', 'font-semibold');
-        activeFilter.hairType = pill.dataset.hairtype;
-        renderSalons();
-        renderMapMarkers();
-      });
-    });
-
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         closeAllModals();
@@ -1172,6 +1306,7 @@
     activeFilter.searchQuery = "";
     activeFilter.maxDistance = 10.0;
     activeFilter.hairType = "all";
+    activeFilter.specialty = "all";
     activeFilter.sortBy = "demandScore";
 
     const searchInput = document.getElementById('search-input');
@@ -1183,6 +1318,7 @@
       distValue.textContent = "10 mi";
     }
 
+    setSpecialtyFilter('all');
     renderAll();
   }
 
@@ -1236,7 +1372,8 @@
     setLocation,
     useCurrentDeviceLocation,
     resetFilters,
-    installApp
+    installApp,
+    setSpecialtyFilter
   };
 
   document.addEventListener('DOMContentLoaded', init);

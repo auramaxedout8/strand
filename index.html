@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Strand — Haircut Directives & Live Location Salon Finder</title>
+  <title>STRAND — Haircut Directives & Live Location Salon Finder</title>
   <meta name="description" content="A minimalist app for finding salons where barbers strictly understand customer haircut directives and reference photos. Connected to Google Maps with live location suggestions." />
 
   <!-- PWA & Mobile Web App Meta Tags -->
@@ -47,22 +47,157 @@
     };
   </script>
 
-  <!-- Lucide Icons CDN -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
   <!-- Leaflet CSS & JS for Minimalist Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- App Custom Styles -->
-<link rel="stylesheet" href="styles.css" />
-<link rel="stylesheet" href="css/styles.css" />
+  <!-- Complete Minimalist Beige Design System Styles (Embedded for 100% Reliable Loading) -->
+  <style>
+    :root {
+      --bg-page: #f7f4ef;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f0ece3;
+      --bg-hover: #e9e4d9;
+      --text-main: #211f1c;
+      --text-secondary: #6e675f;
+      --text-muted: #9c9489;
+      --border-light: #e5dfd5;
+      --border-medium: #d6cdc0;
+      --accent-espresso: #211f1c;
+      --accent-terracotta: #a65d37;
+      --accent-sage: #386641;
+      --badge-sage-bg: #eaf2eb;
+      --badge-warm-bg: #f4ede4;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-page); }
+    ::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 9999px; }
+    .minimal-header {
+      background-color: rgba(247, 244, 239, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .badge-sage { background-color: var(--badge-sage-bg); color: var(--accent-sage); }
+    .badge-warm { background-color: var(--badge-warm-bg); color: var(--accent-terracotta); }
+    .salon-card {
+      background-color: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 18px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .salon-card:hover {
+      border-color: #beb4a5;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(33, 31, 28, 0.06);
+    }
+    .leaflet-container {
+      font-family: var(--font-sans) !important;
+      background: #f7f4ef !important;
+      border-radius: 16px;
+    }
+    .user-pin-minimal {
+      position: relative;
+      width: 24px;
+      height: 24px;
+    }
+    .user-pin-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(33, 31, 28, 0.15);
+      animation: pulse-ring 2s infinite ease-out;
+    }
+    .user-pin-core {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: 14px;
+      height: 14px;
+      background: var(--accent-espresso);
+      border: 2.5px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .pin-minimal-badge {
+      background: #211f1c;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      border: 1.5px solid #ffffff;
+    }
+    .photo-dropzone {
+      border: 1.5px dashed var(--border-medium);
+      background-color: var(--bg-page);
+      border-radius: 16px;
+      transition: all 0.2s ease;
+    }
+    .photo-dropzone:hover {
+      border-color: var(--accent-espresso);
+      background-color: #f2ece0;
+    }
+    .minimal-input {
+      background-color: #ffffff;
+      border: 1px solid var(--border-light);
+      color: var(--text-main);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .minimal-input:focus {
+      border-color: var(--accent-espresso);
+      box-shadow: 0 0 0 2px rgba(33, 31, 28, 0.08);
+      outline: none;
+    }
+    .modal-overlay {
+      transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+    }
+    .modal-card {
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out;
+    }
+    .modal-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .modal-overlay.hidden .modal-card {
+      transform: scale(0.97) translateY(8px);
+      opacity: 0;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #printable-demand-card, #printable-demand-card * { visibility: visible; }
+      #printable-demand-card {
+        position: absolute; left: 0; top: 0; width: 100%;
+        background: #fff !important; border: 1px solid #000 !important;
+      }
+    }
+  </style>
 </head>
 <body class="bg-beige-100 text-stone-900 min-h-screen flex flex-col antialiased selection:bg-stone-300">
 
   <!-- Minimalist Top Navigation -->
   <header class="sticky top-0 z-40 minimal-header px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between">
-    <!-- Logo: A hair strand forming a slight curve of S (not a proper S) -->
+    <!-- Brand Logo: Organic hair strand forming a slight curve of S (not a proper rigid S) -->
     <a href="#" class="flex items-center gap-2.5 group">
       <div class="w-8 h-8 flex items-center justify-center">
         <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-stone-900 group-hover:text-stone-700 transition-colors">
@@ -77,23 +212,17 @@
       </div>
     </a>
 
-    <!-- Personalized User & Location Pill (Clickable to change) -->
+    <!-- Personalized User & Location Pill (Clickable) -->
     <div onclick="window.StrandApp.openWelcomeModal()" class="cursor-pointer flex items-center gap-2 bg-white border border-stone-200/90 hover:border-stone-400 rounded-full px-3.5 py-1.5 text-xs text-stone-700 shadow-sm transition">
       <span class="text-stone-400 text-xs">📍</span>
-      <span id="nav-user-greeting" class="font-medium text-stone-900">Set Location</span>
+      <span id="nav-user-greeting" class="font-medium text-stone-900">Guest</span>
       <span class="text-stone-300">&bull;</span>
-      <span id="nav-location-label" class="text-stone-500 font-normal">Detecting GPS...</span>
+      <span id="nav-location-label" class="text-stone-500 font-normal">SoHo, Lower Manhattan</span>
       <span class="text-[10px] text-stone-400">✏️</span>
     </div>
 
     <!-- Actions -->
     <div class="flex items-center gap-2 sm:gap-2.5">
-      <!-- PWA Install Button -->
-      <button id="pwa-install-btn" onclick="window.StrandApp.installApp()" class="hidden px-3 py-1.5 rounded-full border border-stone-300 text-stone-800 text-xs font-medium hover:bg-stone-50 transition flex items-center gap-1.5 shadow-sm">
-        <span>📲</span>
-        <span class="hidden sm:inline">Install App</span>
-      </button>
-
       <!-- Directive Shortcut -->
       <button onclick="window.StrandApp.openDemandCardViewModal()" class="px-3 py-1.5 rounded-full bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 text-xs font-medium transition shadow-sm flex items-center gap-1.5">
         <span>📋</span>
@@ -117,20 +246,147 @@
   </header>
 
   <!-- Main Container -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-5 sm:px-8 lg:px-10 py-7 space-y-7">
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 lg:px-10 py-6 space-y-6">
 
-    <!-- Personalized Greeting & Headline Banner -->
-    <section id="personalized-greeting-section" class="max-w-2xl space-y-2">
-      <!-- Dynamically rendered by app.js: e.g. "Good afternoon, Alex 👋 Salons near Lower Manhattan that listen." -->
+    <!-- MARKET-READY HERO: Interactive Intake & Personalization Banner (Always Visible!) -->
+    <section class="bg-white border border-stone-200/90 rounded-3xl p-5 sm:p-7 shadow-sm space-y-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-100 pb-5">
+        <div class="space-y-1.5">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full badge-sage text-xs font-semibold tracking-wide">
+            <span>✓</span> 100% Organic Reviews • Zero Sponsored Listings
+          </div>
+          <h1 id="hero-greeting-title" class="font-serif text-2xl sm:text-3xl font-medium text-stone-900 tracking-tight">
+            Good afternoon, friend 👋
+          </h1>
+          <p id="hero-greeting-subtitle" class="text-xs sm:text-sm text-stone-500 max-w-2xl">
+            Discover verified salons near <span class="font-semibold text-stone-800">SoHo, Lower Manhattan</span> where barbers strictly honor your reference photo and never cut off more than requested.
+          </p>
+        </div>
+
+        <!-- Quick Live Stats -->
+        <div class="flex items-center gap-3 self-start md:self-auto">
+          <div class="bg-beige-50 border border-stone-200 rounded-2xl p-3 text-center min-w-[95px]">
+            <div id="stat-salons-count" class="font-bold text-lg text-stone-900">6</div>
+            <div class="text-[10px] text-stone-400 uppercase tracking-wider">Vetted Salons</div>
+          </div>
+          <div class="bg-beige-50 border border-stone-200 rounded-2xl p-3 text-center min-w-[95px]">
+            <div class="font-bold text-lg text-emerald-800">98.2%</div>
+            <div class="text-[10px] text-stone-400 uppercase tracking-wider">Photo Match</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Interactive Intake Form: Name, Location, & Photo -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <!-- 1. Name Input -->
+        <div class="md:col-span-4 bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-1.5">
+          <label class="block text-xs font-semibold text-stone-700">1. Who are you?</label>
+          <div class="flex gap-2">
+            <input type="text" id="quick-name-input" placeholder="Enter your name..." class="flex-1 bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-500" />
+            <button onclick="window.StrandApp.saveQuickName()" class="px-3 py-2 bg-stone-900 text-white rounded-xl text-xs font-medium hover:bg-stone-800 transition">Save</button>
+          </div>
+          <p class="text-[11px] text-stone-400">Used for your personalized greeting and barber card.</p>
+        </div>
+
+        <!-- 2. Location Selector -->
+        <div class="md:col-span-4 bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-semibold text-stone-700">2. Your Live Location</label>
+            <span id="location-active-tag" class="text-[10px] font-medium text-stone-500">Manual (SoHo)</span>
+          </div>
+          <button onclick="window.StrandApp.detectLiveGPS()" class="w-full py-2 px-3 bg-white border border-stone-200 hover:border-stone-400 rounded-xl text-xs font-medium text-stone-800 flex items-center justify-center gap-2 transition shadow-xs">
+            <span>📍</span> <span id="quick-gps-btn-text">Detect Live GPS Location</span>
+          </button>
+          <!-- Quick Area Pills -->
+          <div class="flex flex-wrap gap-1.5 pt-0.5">
+            <button onclick="window.StrandApp.quickSetArea('soho')" class="px-2 py-1 bg-white hover:bg-stone-200 border border-stone-200 rounded-lg text-[10px] font-medium text-stone-700">SoHo</button>
+            <button onclick="window.StrandApp.quickSetArea('tribeca')" class="px-2 py-1 bg-white hover:bg-stone-200 border border-stone-200 rounded-lg text-[10px] font-medium text-stone-700">Tribeca</button>
+            <button onclick="window.StrandApp.quickSetArea('bowery')" class="px-2 py-1 bg-white hover:bg-stone-200 border border-stone-200 rounded-lg text-[10px] font-medium text-stone-700">Bowery</button>
+            <button onclick="window.StrandApp.quickSetArea('village')" class="px-2 py-1 bg-white hover:bg-stone-200 border border-stone-200 rounded-lg text-[10px] font-medium text-stone-700">Village</button>
+            <button onclick="window.StrandApp.quickSetArea('hudson')" class="px-2 py-1 bg-white hover:bg-stone-200 border border-stone-200 rounded-lg text-[10px] font-medium text-stone-700">Hudson Sq</button>
+          </div>
+        </div>
+
+        <!-- 3. Reference Photo Uploader -->
+        <div class="md:col-span-4 bg-stone-50 border border-stone-200 rounded-2xl p-3.5 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-semibold text-stone-700">3. Haircut Reference Photo</label>
+            <button onclick="window.StrandApp.openDemandBuilderModal()" class="text-[11px] text-stone-500 hover:text-stone-900 underline">Customize</button>
+          </div>
+          
+          <div id="quick-photo-dropzone" onclick="document.getElementById('quick-photo-file-input').click()" class="cursor-pointer bg-white border border-dashed border-stone-300 hover:border-stone-500 rounded-xl p-2.5 flex items-center gap-3 transition">
+            <input type="file" id="quick-photo-file-input" accept="image/*" class="hidden" onchange="window.StrandApp.handleQuickPhotoUpload(event)" />
+            <div id="quick-photo-thumbnail" class="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center overflow-hidden border border-stone-200 flex-shrink-0">
+              <span class="text-stone-400 text-sm">📸</span>
+            </div>
+            <div class="text-left overflow-hidden">
+              <div id="quick-photo-status" class="text-xs font-medium text-stone-800 truncate">Upload What You Want</div>
+              <div class="text-[10px] text-stone-400">Click to choose image or photo</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Active Strand Directive Banner -->
+    <!-- Active Strand Directive Banner Preview -->
     <section id="demand-banner-container" aria-label="Haircut Directive Banner">
-      <!-- Injected dynamically by app.js -->
+      <!-- Injected dynamically -->
     </section>
 
-    <!-- Curated Top Picks / Recommendations Spotlight -->
-    <section class="space-y-3" aria-label="Strand Curated Recommendations">
+    <!-- Interactive Filters & Radius Bar -->
+    <section class="bg-white border border-stone-200/90 rounded-2xl p-4 shadow-sm space-y-3" aria-label="Filters">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <!-- Search Input -->
+        <div class="md:col-span-5 relative">
+          <span class="absolute left-3.5 top-2.5 text-stone-400 text-xs">🔍</span>
+          <input type="text" id="search-input" oninput="window.StrandApp.handleSearchChange(this.value)" placeholder="Search salons, barbers, or styles (fade, curls, scissor, beard)..." class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-400 transition" />
+        </div>
+
+        <!-- Real-Time Radius Slider -->
+        <div class="md:col-span-4 bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-1.5 flex items-center justify-between gap-3">
+          <span class="text-xs text-stone-500 font-medium whitespace-nowrap">Radius: <strong id="distance-value" class="text-stone-900">5 mi</strong></span>
+          <input type="range" id="distance-slider" min="0.5" max="10" step="0.5" value="5" oninput="window.StrandApp.handleRadiusChange(this.value)" class="w-full cursor-pointer accent-stone-900" />
+        </div>
+
+        <!-- Sort Select -->
+        <div class="md:col-span-3">
+          <select id="sort-select" onchange="window.StrandApp.handleSortChange(this.value)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none focus:bg-white focus:border-stone-400 transition">
+            <option value="demandScore">Sort: Directive Honor Score</option>
+            <option value="distance">Closest to My Location</option>
+            <option value="organicRating">Top Organic Reviews</option>
+            <option value="reviews">Most Reviewed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Specialty Filter Tags -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 text-xs">
+        <span class="text-[11px] text-stone-400 mr-1 font-medium">Specialty:</span>
+        <button onclick="window.StrandApp.setSpecialtyFilter('all')" id="pill-specialty-all" class="px-3 py-1 rounded-full text-xs font-medium transition bg-stone-900 text-white shadow-xs">All Barbers</button>
+        <button onclick="window.StrandApp.setSpecialtyFilter('recommended')" id="pill-specialty-recommended" class="px-3 py-1 rounded-full text-xs font-medium transition bg-stone-100 hover:bg-stone-200 text-stone-700">★ Curated Picks</button>
+        <button onclick="window.StrandApp.setSpecialtyFilter('fades')" id="pill-specialty-fades" class="px-3 py-1 rounded-full text-xs font-medium transition bg-stone-100 hover:bg-stone-200 text-stone-700">Precision Fades</button>
+        <button onclick="window.StrandApp.setSpecialtyFilter('curls')" id="pill-specialty-curls" class="px-3 py-1 rounded-full text-xs font-medium transition bg-stone-100 hover:bg-stone-200 text-stone-700">Curly / Textured</button>
+        <button onclick="window.StrandApp.setSpecialtyFilter('scissor')" id="pill-specialty-scissor" class="px-3 py-1 rounded-full text-xs font-medium transition bg-stone-100 hover:bg-stone-200 text-stone-700">Scissor Mastery</button>
+      </div>
+    </section>
+
+    <!-- Minimalist Map Toggle Section -->
+    <section class="bg-white border border-stone-200/90 rounded-2xl p-4 shadow-sm space-y-3" aria-label="Map View">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-stone-400 text-xs">🗺️</span>
+          <h2 class="text-xs font-bold text-stone-900 uppercase tracking-wider">Live Proximity Map</h2>
+          <span id="map-counter-badge" class="text-[11px] text-stone-500 font-normal">Showing salons near you</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.StrandApp.centerMapOnUser()" class="text-xs text-stone-600 hover:text-stone-900 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition">Center on Me</button>
+        </div>
+      </div>
+      <div id="salons-map" class="w-full h-64 sm:h-72 rounded-xl border border-stone-200/90 shadow-inner"></div>
+    </section>
+
+    <!-- Curated Top Picks Spotlight -->
+    <section class="space-y-3" aria-label="Curated Recommendations">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-amber-700 text-xs">⭐</span>
@@ -140,139 +396,57 @@
         <span id="recommendations-distance-context" class="text-xs text-stone-400">Closest verified barbers</span>
       </div>
 
-      <div id="recommendations-spotlight" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <!-- Injected dynamically by app.js -->
+      <div id="recommendations-spotlight" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Injected dynamically -->
       </div>
     </section>
 
-    <!-- Minimalist Filter Bar -->
-    <section class="bg-white border border-stone-200/90 rounded-2xl p-4 shadow-sm space-y-3" aria-label="Filters">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-        <!-- Search Input -->
-        <div class="md:col-span-6 relative">
-          <span class="absolute left-3.5 top-2.5 text-stone-400 text-xs">🔍</span>
-          <input type="text" id="search-input" placeholder="Search salons, barbers, or styles (fade, curls, scissor, beard)..." class="w-full bg-stone-50 border border-stone-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-400 transition" />
-        </div>
-
-        <!-- Radius Slider -->
-        <div class="md:col-span-3 bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-1.5 flex items-center justify-between gap-3">
-          <span class="text-xs text-stone-500 font-medium whitespace-nowrap">Radius: <strong id="distance-value" class="text-stone-900">5 mi</strong></span>
-          <input type="range" id="distance-slider" min="0.5" max="10" step="0.5" value="5" class="w-full cursor-pointer" />
-        </div>
-
-        <!-- Sort Select -->
-        <div class="md:col-span-3">
-          <select id="sort-select" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none">
-            <option value="demandScore">Highest Listening Score</option>
-            <option value="distance">Closest to My Location</option>
-            <option value="rating">Top Organic Rating</option>
-            <option value="reviews">Most Reviews</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Quick Filter Pills: Recommendations, Hair Texture, Google Maps -->
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-100 text-xs">
-        <div class="flex flex-wrap items-center gap-1.5">
-          <span class="text-[11px] font-medium text-stone-400 mr-1 uppercase tracking-wide">Filter:</span>
-          <button data-filter="all" onclick="window.StrandApp.setSpecialtyFilter('all')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs font-semibold bg-stone-900 text-white transition">
-            All Salons
-          </button>
-          <button data-filter="recommended" onclick="window.StrandApp.setSpecialtyFilter('recommended')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-            ⭐ Strand Top Picks
-          </button>
-          <button data-filter="fades" onclick="window.StrandApp.setSpecialtyFilter('fades')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-            Fade & Beard
-          </button>
-          <button data-filter="curls" onclick="window.StrandApp.setSpecialtyFilter('curls')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-            Curly & Textured
-          </button>
-          <button data-filter="scissor" onclick="window.StrandApp.setSpecialtyFilter('scissor')" class="specialty-filter-pill px-3 py-1 rounded-full text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
-            Scissor & Wolf Cuts
-          </button>
-        </div>
-
+    <!-- All Matching Salons Grid -->
+    <section class="space-y-4" aria-label="All Salons List">
+      <div class="flex items-center justify-between border-b border-stone-200/70 pb-3">
         <div class="flex items-center gap-2">
-          <a id="nav-external-gmaps-link" href="https://www.google.com/maps/search/hair+salon+near+me" target="_blank" rel="noopener noreferrer" class="text-stone-500 hover:text-stone-900 text-xs flex items-center gap-1 font-medium transition">
-            <span>🗺️ Google Maps Search</span>
-            <span class="text-[10px]">&nearr;</span>
-          </a>
+          <h2 class="font-serif text-lg font-medium text-stone-900">All Verified Salons</h2>
+          <span id="salons-count-label" class="text-xs bg-stone-200/70 text-stone-700 px-2.5 py-0.5 rounded-full font-medium">6 Available</span>
         </div>
+        <div class="text-xs text-stone-400">Audited for haircut demand compliance</div>
+      </div>
+
+      <div id="salons-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Injected dynamically -->
       </div>
     </section>
-
-    <!-- Main Layout: Clean Split (Map + Salon List) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
-      <!-- Left Column: Minimalist Light Map with Google Maps Bridge (5 Cols) -->
-      <aside class="lg:col-span-5 sticky top-24 space-y-3">
-        <div class="bg-white border border-stone-200/90 rounded-2xl p-3 shadow-sm overflow-hidden">
-          <div class="flex items-center justify-between pb-2 px-1 text-xs">
-            <span class="font-medium text-stone-700">Near You Map</span>
-            <div class="flex items-center gap-2">
-              <button onclick="window.StrandApp.useCurrentDeviceLocation()" class="text-stone-500 hover:text-stone-900 text-[11px] font-medium">📍 Refresh GPS</button>
-              <span class="text-stone-300">&bull;</span>
-              <a id="active-google-maps-link" href="https://www.google.com/maps/search/barbershop+near+me/@40.7230,-73.9980,14z" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 text-[11px] flex items-center gap-0.5">
-                <span>Google Maps View</span> &nearr;
-              </a>
-            </div>
-          </div>
-          <!-- Leaflet Map -->
-          <div id="salons-map" class="h-72 sm:h-80 w-full rounded-xl overflow-hidden border border-stone-100"></div>
-          <div class="mt-2 px-1 text-[11px] text-stone-400 flex items-center justify-between">
-            <span id="map-user-pin-label">● Black dot: your live location</span>
-            <span>✂ Pins: Listening score</span>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Right Column: Minimalist Salon Directory (7 Cols) -->
-      <section class="lg:col-span-7 space-y-4">
-        <!-- Results Counter -->
-        <div class="flex items-center justify-between px-1">
-          <h2 id="results-count" class="text-sm font-medium text-stone-600">Salons Near You</h2>
-          <button onclick="window.StrandApp.openDemandBuilderModal()" class="text-xs text-stone-500 hover:text-stone-900 font-medium">
-            Edit Directives & Reference Photo &rarr;
-          </button>
-        </div>
-
-        <!-- Salon Cards List -->
-        <div id="salons-list" class="space-y-4">
-          <!-- Dynamically populated by app.js -->
-        </div>
-      </section>
-
-    </div>
 
   </main>
 
   <!-- Minimalist Footer -->
-  <footer class="mt-20 border-t border-stone-200 bg-beige-100 py-10 px-6 lg:px-12 text-xs text-stone-500">
-    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2.5">
-        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-stone-900">
-          <circle cx="21" cy="5" r="1.3" fill="currentColor"/>
-          <path d="M 21 5 C 16 8, 13 14, 15 19 C 17.5 24, 21 27, 20 31 C 19 33.5, 17 35, 15 36" 
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="font-bold text-stone-900">STRAND</span>
-        <span class="text-stone-400">&bull;</span>
-        <span>Personalized Salon Intelligence &bull; Google Maps Connected</span>
-      </div>
-
-      <div class="flex items-center gap-4 text-[11px]">
-        <span>Live Location Matching</span>
-        <span>&bull;</span>
-        <span>Haircut Photo Attached</span>
-        <span>&bull;</span>
-        <span>Directives Honored</span>
-      </div>
+  <footer class="mt-16 border-t border-stone-200/80 bg-white/70 py-8 px-5 sm:px-8 text-center text-xs text-stone-500 space-y-2">
+    <div class="flex items-center justify-center gap-2 text-stone-800 font-semibold text-sm">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-stone-900">
+        <circle cx="21" cy="5" r="1.3" fill="currentColor"/>
+        <path d="M 21 5 C 16 8, 13 14, 15 19 C 17.5 24, 21 27, 20 31 C 19 33.5, 17 35, 15 36" 
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>STRAND</span>
+    </div>
+    <p>Minimalist Salon Intelligence. 100% Organic Reviews. Barbers who strictly honor what you want.</p>
+    <div class="flex items-center justify-center gap-4 text-stone-400 text-[11px] pt-1">
+      <span>Connected to Google Maps</span>
+      <span>&bull;</span>
+      <span>Live Distance Calculation</span>
+      <span>&bull;</span>
+      <span>Zero Paid Ads</span>
     </div>
   </footer>
 
-  <!-- ==================== MODALS ==================== -->
+  <!-- Toast Container -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-8 opacity-0 pointer-events-none transition-all duration-300 bg-stone-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2">
+    <span id="toast-icon">✓</span>
+    <span id="toast-message">Notification</span>
+  </div>
 
-  <!-- 0. WELCOME / ONBOARDING MODAL: Asks for Name & Live Location -->
+  <!-- MODALS -->
+
+  <!-- 1. Welcome / Location Modal -->
   <div id="welcome-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
     <div class="modal-card bg-white w-full max-w-md overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl p-6 sm:p-7 relative">
       <div class="flex items-center justify-between pb-3 border-b border-stone-100">
@@ -292,17 +466,13 @@
       </p>
 
       <form id="welcome-form" onsubmit="window.StrandApp.handleWelcomeSubmit(event)" class="space-y-4 mt-5">
-        <!-- Name Input -->
         <div>
           <label class="block text-xs font-semibold text-stone-700 mb-1">What is your name?</label>
           <input type="text" id="welcome-name-input" placeholder="e.g. Alex, Jordan, Sarah..." class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-500 transition" required />
         </div>
 
-        <!-- Live Location Section -->
         <div class="space-y-2">
           <label class="block text-xs font-semibold text-stone-700 mb-0.5">Your Location</label>
-          
-          <!-- Instant GPS Button -->
           <button type="button" onclick="window.StrandApp.detectLiveLocationInModal()" class="w-full py-2.5 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-medium border border-stone-200 transition flex items-center justify-center gap-2">
             <span>📍</span>
             <span id="welcome-gps-btn-text">Detect My Live GPS Location</span>
@@ -310,80 +480,170 @@
 
           <div class="relative flex py-1 items-center">
             <div class="flex-grow border-t border-stone-200"></div>
-            <span class="flex-shrink mx-2 text-[10px] text-stone-400 uppercase tracking-wider">or pick an area</span>
+            <span class="flex-shrink mx-2 text-[10px] text-stone-400 uppercase tracking-widest font-medium">or select area</span>
             <div class="flex-grow border-t border-stone-200"></div>
           </div>
 
-          <!-- Manual Area Picker -->
-          <select id="welcome-location-select" onchange="window.StrandApp.handleWelcomeLocationSelect(this.value)" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:outline-none">
-            <option value="soho">SoHo / Lower Manhattan</option>
-            <option value="midtown">Midtown Manhattan</option>
-            <option value="tribeca">Tribeca / Financial District</option>
-            <option value="brooklyn">Brooklyn Heights / DUMBO</option>
-          </select>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button type="button" onclick="window.StrandApp.handleWelcomeLocationSelect('soho')" class="p-2 border border-stone-200 rounded-xl text-left hover:border-stone-400 transition bg-stone-50/50">
+              <span class="font-medium text-stone-900 block">SoHo</span>
+              <span class="text-[10px] text-stone-400">Lower Manhattan</span>
+            </button>
+            <button type="button" onclick="window.StrandApp.handleWelcomeLocationSelect('tribeca')" class="p-2 border border-stone-200 rounded-xl text-left hover:border-stone-400 transition bg-stone-50/50">
+              <span class="font-medium text-stone-900 block">Tribeca</span>
+              <span class="text-[10px] text-stone-400">Grand & Hudson</span>
+            </button>
+            <button type="button" onclick="window.StrandApp.handleWelcomeLocationSelect('bowery')" class="p-2 border border-stone-200 rounded-xl text-left hover:border-stone-400 transition bg-stone-50/50">
+              <span class="font-medium text-stone-900 block">Bowery / LES</span>
+              <span class="text-[10px] text-stone-400">Lower East Side</span>
+            </button>
+            <button type="button" onclick="window.StrandApp.handleWelcomeLocationSelect('village')" class="p-2 border border-stone-200 rounded-xl text-left hover:border-stone-400 transition bg-stone-50/50">
+              <span class="font-medium text-stone-900 block">Greenwich Village</span>
+              <span class="text-[10px] text-stone-400">Bleeker & 6th Ave</span>
+            </button>
+          </div>
         </div>
 
-        <div class="pt-2">
-          <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-medium transition shadow-md">
-            Show Salons Near Me &rarr;
+        <div class="pt-3 flex gap-2">
+          <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold transition shadow-md">
+            Save & Find Barbers Near Me
+          </button>
+          <button type="button" onclick="window.StrandApp.closeModal('welcome-modal')" class="py-3 px-4 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 text-xs font-medium transition">
+            Skip
           </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 1. Salon Details Modal -->
-  <div id="salon-details-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
-    <div class="modal-card bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
-      <div id="salon-details-content">
-        <!-- Injected dynamically -->
+  <!-- 2. Haircut Directive Builder & Reference Photo Modal -->
+  <div id="demand-builder-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl p-6 sm:p-7 relative">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+        <div class="flex items-center gap-2">
+          <span class="text-stone-900 text-base">📷</span>
+          <h3 class="font-serif text-lg font-medium text-stone-900">Haircut Directive & Reference Photo</h3>
+        </div>
+        <button onclick="window.StrandApp.closeModal('demand-builder-modal')" class="text-stone-400 hover:text-stone-800 text-lg">✕</button>
       </div>
+
+      <p class="text-xs text-stone-500 mt-2 leading-relaxed">
+        Upload the exact haircut you want and state your boundaries. Strand generates a digital card for the barber to inspect before cutting.
+      </p>
+
+      <form id="demand-builder-form" onsubmit="window.StrandApp.handleDemandBuilderSubmit(event)" class="space-y-4 mt-4">
+        <!-- Photo Upload Box -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-stone-700">Customer Reference Photo</label>
+          <div class="photo-dropzone p-4 text-center cursor-pointer relative" onclick="document.getElementById('modal-photo-input').click()">
+            <input type="file" id="modal-photo-input" accept="image/*" class="hidden" onchange="window.StrandApp.handlePhotoFileChange(event)" />
+            <div id="modal-photo-preview-box" class="space-y-2">
+              <div class="w-12 h-12 mx-auto rounded-full bg-stone-100 flex items-center justify-center text-stone-500 text-xl">📸</div>
+              <div class="text-xs font-medium text-stone-800">Click or Drag to Upload Reference Photo</div>
+              <div class="text-[11px] text-stone-400">JPG, PNG, WEBP (stored locally on your device)</div>
+            </div>
+          </div>
+          <div id="modal-photo-active-view" class="hidden flex items-center justify-between bg-stone-50 border border-stone-200 rounded-xl p-2.5">
+            <div class="flex items-center gap-3">
+              <img id="modal-photo-img" src="" class="w-12 h-12 object-cover rounded-lg border border-stone-200" alt="Reference photo" />
+              <div>
+                <span class="text-xs font-semibold text-stone-900 block">Photo Attached ✓</span>
+                <span class="text-[10px] text-emerald-800 font-medium">Ready for barber review</span>
+              </div>
+            </div>
+            <button type="button" onclick="window.StrandApp.clearUploadedPhoto()" class="text-xs text-red-600 hover:text-red-800 px-2.5 py-1 rounded-lg border border-red-200 hover:bg-red-50">Remove</button>
+          </div>
+        </div>
+
+        <!-- Predefined Templates -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-stone-700">Or Pick a Curated Hairstyle Blueprint</label>
+          <div id="templates-list-container" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Haircut Strict Instructions -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-stone-700">Strict Instructions (What barber must NOT do)</label>
+          <textarea id="directive-instructions" rows="3" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:bg-white focus:border-stone-500 transition" placeholder="e.g. Do not push hairline back. Keep top natural length. Do not use thinning shears on crowns. Show guard in mirror before cutting."></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Hair Texture</label>
+            <select id="directive-hair-type" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-900">
+              <option value="Straight (1A-1C)">Straight (1A-1C)</option>
+              <option value="Wavy (2A-2C)">Wavy (2A-2C)</option>
+              <option value="Curly (3A-3C)" selected>Curly (3A-3C)</option>
+              <option value="Coily (4A-4C)">Coily (4A-4C)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-stone-700 mb-1">Communication Style</label>
+            <select id="directive-comm-style" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-900">
+              <option value="Consultative (Regular Checkpoints)">Consultative (Regular Checkpoints)</option>
+              <option value="Silent Cut (Minimal Small Talk)">Silent Cut (Minimal Small Talk)</option>
+              <option value="Standard Barber Chat">Standard Barber Chat</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="submit" class="flex-1 py-3 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold transition shadow-md">
+            Save Haircut Directive
+          </button>
+          <button type="button" onclick="window.StrandApp.closeModal('demand-builder-modal')" class="py-3 px-4 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 text-xs font-medium transition">
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- 2. Demand Builder Modal (Includes Photo Upload) -->
-  <div id="demand-builder-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
-    <div class="modal-card bg-white w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
-      <div id="demand-builder-content">
-        <!-- Injected dynamically -->
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. View Demand Card Modal -->
-  <div id="demand-card-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
-    <div class="modal-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl relative">
+  <!-- 3. View Haircut Directive Modal (Card for Barber) -->
+  <div id="demand-card-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl p-6 sm:p-7 relative">
       <div id="demand-card-content">
         <!-- Injected dynamically -->
       </div>
     </div>
   </div>
 
-  <!-- 4. Booking Modal -->
-  <div id="booking-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
-    <div class="modal-card bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
+  <!-- 4. Salon Details Modal -->
+  <div id="salon-details-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl relative">
+      <div id="salon-details-content">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Booking Modal -->
+  <div id="booking-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-md max-h-[92vh] overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl p-6 relative">
       <div id="booking-modal-content">
         <!-- Injected dynamically -->
       </div>
     </div>
   </div>
 
-  <!-- 5. Review Modal -->
-  <div id="review-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
-    <div class="modal-card bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl relative">
+  <!-- 6. Write Organic Review Modal -->
+  <div id="review-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl p-6 relative">
       <div id="review-modal-content">
         <!-- Injected dynamically -->
       </div>
     </div>
   </div>
 
-  <!-- 6. Bookings Modal -->
-  <div id="bookings-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
-    <div class="modal-card bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-stone-200 shadow-xl p-6 relative">
-      <div class="flex items-center justify-between pb-4 border-b border-stone-100">
+  <!-- 7. My Bookings Modal -->
+  <div id="bookings-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 hidden" role="dialog" aria-modal="true">
+    <div class="modal-card bg-white w-full max-w-md max-h-[92vh] overflow-y-auto rounded-3xl border border-stone-200 shadow-2xl p-6 relative">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-100">
         <div>
-          <h3 class="font-semibold text-stone-900">My Appointments</h3>
-          <p class="text-xs text-stone-400">Scheduled cuts with attached directives</p>
+          <h3 class="font-serif text-lg font-medium text-stone-900">My Appointments</h3>
+          <p class="text-xs text-stone-400">Scheduled cuts with attached haircut directives</p>
         </div>
         <button onclick="window.StrandApp.closeModal('bookings-modal')" class="text-stone-400 hover:text-stone-800 text-lg">✕</button>
       </div>
@@ -394,8 +654,1418 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+  <!-- ==========================================================================
+       COMPLETE EMBEDDED STRAND JAVASCRIPT APPLICATION ENGINE
+       (All Salon Data + Templates + App Logic bundled for 100% reliable GitHub Pages)
+       ========================================================================== -->
+  <script>
+    // 1. VERIFIED SALONS DATABASE & TEMPLATES
+    const INITIAL_SALONS = [
+      {
+        id: "salon-1",
+        name: "The Artizan Barber & Consultation Studio",
+        tagline: "Dedicated 10-Minute Consultation Before Shears Ever Touch Your Hair",
+        address: "142 Mercer St, SoHo, New York, NY 10012",
+        neighborhood: "SoHo",
+        lat: 40.7248,
+        lng: -73.9991,
+        phone: "(212) 555-0142",
+        priceRange: "$$$",
+        hours: "9:00 AM - 8:00 PM",
+        heroImage: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80",
+        demandUnderstandingScore: 99,
+        listeningRating: 4.95,
+        photoFidelityRate: 98,
+        organicRating: 4.94,
+        organicReviewCount: 142,
+        isRecommended: true,
+        recommendationCategory: "Overall #1 Pick: Consultation & Fades",
+        recommendationReason: "Consistently audited at 99% length fidelity. Outstanding mirror consultation before any clipper touch.",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=The+Artizan+Barber+142+Mercer+St+SoHo+New+York",
+        googleDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=40.7248,-73.9991",
+        specialties: ["Curly & Textured Hair", "Skin Fades", "Beard Sculpting", "Trauma Fix / Bad Cut Recovery"],
+        barbers: [
+          {
+            id: "b-1",
+            name: "Marcus Vance",
+            title: "Master Barber & Consultation Lead",
+            experience: "14 years",
+            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+            demandScore: 99,
+            listeningQuote: "I never assume. If you say half an inch, I show you half an inch on the comb first.",
+            specialty: "Precision Fades & Cowlick Correction"
+          },
+          {
+            id: "b-2",
+            name: "Elena Rostova",
+            title: "Texture & Scissor Specialist",
+            experience: "9 years",
+            avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80",
+            demandScore: 98,
+            listeningQuote: "Your reference photo is our blueprint, but your bone structure is our foundation.",
+            specialty: "Curly & Wavy Layering"
+          }
+        ],
+        organicReviews: [
+          {
+            author: "Julian K.",
+            verifiedDate: "Verified Visit • Nov 2, 2026",
+            requestedCut: "Low taper fade, preserve top curls, do not cut into hairline",
+            barberName: "Marcus Vance",
+            reviewText: "Finally a barber who doesn't scalp you when you ask for a trim! I showed Marcus 3 reference photos. He spent 7 minutes analyzing how my curls lay dry, asked clarifying questions, and showed me with the mirror before taking off any length. Absolute perfection.",
+            tags: ["Listened to reference photo", "Honored length request"]
+          }
+        ]
+      },
+      {
+        id: "salon-2",
+        name: "True Form Hair Lab & Atelier",
+        tagline: "The Anti-Rushed Salon: Every Request Mapped & Honored",
+        address: "78 Grand St, Tribeca, New York, NY 10013",
+        neighborhood: "Tribeca",
+        lat: 40.7205,
+        lng: -74.0042,
+        phone: "(212) 555-0189",
+        priceRange: "$$$$",
+        hours: "10:00 AM - 7:30 PM",
+        heroImage: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80",
+        demandUnderstandingScore: 98,
+        listeningRating: 4.92,
+        photoFidelityRate: 97,
+        organicRating: 4.91,
+        organicReviewCount: 118,
+        isRecommended: true,
+        recommendationCategory: "Top Pick: Scissor Work & Modern Wolf Cuts",
+        recommendationReason: "Unrivaled expertise in scissor-over-comb cuts, cowlick management, and Asian / thick hair texture.",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=True+Form+Hair+Lab+78+Grand+St+Tribeca+New+York",
+        googleDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=40.7205,-74.0042",
+        specialties: ["Scissor Mastery", "Wolf Cuts & Shags", "Quiet Appointments", "Thinning Hair Optimization"],
+        barbers: [
+          {
+            id: "b-3",
+            name: "Soren Lindqvist",
+            title: "Creative Director & Scissor Artisan",
+            experience: "16 years",
+            avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+            demandScore: 99,
+            listeningQuote: "If a client says 'I only have 3 minutes to style in the morning', I cut for real life.",
+            specialty: "Effortless Scissor Cuts & Texture"
+          }
+        ],
+        organicReviews: [
+          {
+            author: "Kevin L.",
+            verifiedDate: "Verified Visit • Nov 5, 2026",
+            requestedCut: "Modern scissor crop, no clippers on sides, natural texture",
+            barberName: "Soren Lindqvist",
+            reviewText: "Most barbers hear 'crop' and pull out a #2 clipper immediately. Soren didn't touch a clipper. He listened, observed my stubborn cowlick, and cut it so it naturally falls into place. Worth every dollar.",
+            tags: ["No-clippers request honored", "Cowlick mastery"]
+          }
+        ]
+      },
+      {
+        id: "salon-3",
+        name: "Crown & Blade Craft Barbershop",
+        tagline: "Where 'Just Clean Up The Edges' Means Exactly That",
+        address: "215 Bowery, Lower East Side, New York, NY 10002",
+        neighborhood: "Bowery",
+        lat: 40.7219,
+        lng: -73.9932,
+        phone: "(212) 555-0167",
+        priceRange: "$$",
+        hours: "8:30 AM - 8:30 PM",
+        heroImage: "https://images.unsplash.com/photo-1593702295094-ada7554100c3?auto=format&fit=crop&w=1200&q=80",
+        demandUnderstandingScore: 97,
+        listeningRating: 4.88,
+        photoFidelityRate: 96,
+        organicRating: 4.89,
+        organicReviewCount: 204,
+        isRecommended: true,
+        recommendationCategory: "Top Pick: Traditional Tapers & Beard Sculpting",
+        recommendationReason: "Zero unwanted paint or chalk enhancements. Strict adherence to client beard bounds.",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Crown+and+Blade+Barbershop+215+Bowery+New+York",
+        googleDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=40.7219,-73.9932",
+        specialties: ["Classic Fades", "Beard Lineup & Hot Towel", "Low Tapers", "Edge-Up Specialists"],
+        barbers: [
+          {
+            id: "b-5",
+            name: "Darius Washington",
+            title: "Fade Craftsman & Beard Alchemist",
+            experience: "11 years",
+            avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
+            demandScore: 98,
+            listeningQuote: "A good fade is respecting what the client actually requested, not rushing.",
+            specialty: "Beard Sculpting & Razor Lineups"
+          }
+        ],
+        organicReviews: [
+          {
+            author: "Marcus T.",
+            verifiedDate: "Verified Visit • Nov 8, 2026",
+            requestedCut: "Mid taper fade, keep beard fullness, sharp lineup without chalk/paint",
+            barberName: "Darius Washington",
+            reviewText: "Other shops spray artificial hair paint without asking. Darius asked first, I told him 'all natural only', and he gave me the sharpest organic edge without any enhancements.",
+            tags: ["No unwanted enhancements", "Preserved beard bulk"]
+          }
+        ]
+      },
+      {
+        id: "salon-4",
+        name: "Aura & Grain Botanical Hair Space",
+        tagline: "Holistic Haircare, Zero Judgment, 100% Attentive Listening",
+        address: "49 Bleeker St, Greenwich Village, New York, NY 10012",
+        neighborhood: "Greenwich Village",
+        lat: 40.7259,
+        lng: -73.9961,
+        phone: "(212) 555-0133",
+        priceRange: "$$$",
+        hours: "9:30 AM - 7:00 PM",
+        heroImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80",
+        demandUnderstandingScore: 98,
+        listeningRating: 4.94,
+        photoFidelityRate: 98,
+        organicRating: 4.93,
+        organicReviewCount: 96,
+        isRecommended: true,
+        recommendationCategory: "Top Pick: Curly & Coily Haircare",
+        recommendationReason: "Dry-curl cutting technique that honors curl spring-back and prevents over-shortening.",
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Aura+and+Grain+Hair+49+Bleeker+St+New+York",
+        googleDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=40.7259,-73.9961",
+        specialties: ["Curly Specialists", "Scalp Health", "Organic Color", "Silent Cuts Available"],
+        barbers: [
+          {
+            id: "b-7",
+            name: "Chloe Dupont",
+            title: "Master Curl Stylist & Educator",
+            experience: "13 years",
+            avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80",
+            demandScore: 99,
+            listeningQuote: "Curly hair has trauma. Barbers cut it wet, it shrinks 3 inches, and the customer cries. We cut dry.",
+            specialty: "Dry Curl Sculpting & Volume Balance"
+          }
+        ],
+        organicReviews: [
+          {
+            author: "Sarah B.",
+            verifiedDate: "Verified Visit • Nov 10, 2026",
+            requestedCut: "Shape round halo without losing overall length, remove dead ends only",
+            barberName: "Chloe Dupont",
+            reviewText: "Chloe is the FIRST stylist in New York who understood what I meant by 'micro-trim'. She measured curl shrinkage with me in the mirror before cutting a single curl.",
+            tags: ["Understood curl shrinkage", "True micro-trim"]
+          }
+        ]
+      },
+      {
+        id: "salon-5",
+        name: "Follicle & Flow Men's Grooming Lab",
+        tagline: "Consultation Driven • Engineered Fades • Silent Cuts Welcomed",
+        address: "312 Hudson St, Hudson Square, New York, NY 10013",
+        neighborhood: "Hudson Square",
+        lat: 40.7265,
+        lng: -74.0076,
+        phone: "(212) 555-0158",
+        priceRange: "$$",
+        hours: "8:00 AM - 9:00 PM",
+        heroImage: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80",
+        demandUnderstandingScore: 96,
+        listeningRating: 4.87,
+        photoFidelityRate: 95,
+        organicRating: 4.85,
+        organicReviewCount: 167,
+        isRecommended: false,
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Follicle+and+Flow+312+Hudson+St+New+York",
+        googleDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=40.7265,-74.0076",
+        specialties: ["Textured Quiffs", "Low Skin Taper", "Silent Cut Service", "Thinning Crown Camouflage"],
+        barbers: [
+          {
+            id: "b-8",
+            name: "Kenji Takahashi",
+            title: "Senior Barber & Fade Architect",
+            experience: "10 years",
+            avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80",
+            demandScore: 97,
+            listeningQuote: "I offer a 'Silent Cut' toggle. If you had a stressful day, you don't need small talk. You just need your cut executed perfectly.",
+            specialty: "High/Low Skin Fades & Japanese Scissor Work"
+          }
+        ],
+        organicReviews: [
+          {
+            author: "Alex V.",
+            verifiedDate: "Verified Visit • Nov 1, 2026",
+            requestedCut: "Textured crop with soft fade, disguise thinning spot on the crown",
+            barberName: "Kenji Takahashi",
+            reviewText: "I selected 'Silent Cut' and provided my Strand Directive notes. Kenji read every note, confirmed, and executed the exact cut. Best barber near me by far.",
+            tags: ["Respected silent cut demand", "Crown thinning solution"]
+          }
+        ]
+      },
+      {
+        id: "salon-6",
+        name: "Kith & Razor Barber Lounge",
+        tagline: "Where Every Customer's Hair Story is Heard, Never Dismissed",
+        address: "180 Orchard St, Lower East Side, New York, NY 10002",
+        neighborhood: "Lower East Side",
+        lat: 40.7225,
+        lng: -73.9882,
+        phone: "(212) 555-0199",
+        priceRange: "$$",
+        hours: "9:00 AM - 8:00 PM",
+        heroImage: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=80",
+        demandUnderstandingScore: 97,
+        listeningRating: 4.89,
+        photoFidelityRate: 96,
+        organicRating: 4.88,
+        organicReviewCount: 131,
+        isRecommended: false,
+        googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Kith+and+Razor+180+Orchard+St+New+York",
+        googleDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=40.7225,-73.9882",
+        specialties: ["Classic Pompadours", "Buzz Fades", "Hot Shaves", "Beard Shaping"],
+        barbers: [
+          {
+            id: "b-9",
+            name: "Mateo Gomez",
+            title: "Traditional Craftsman & Patient Barber",
+            experience: "12 years",
+            avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80",
+            demandScore: 98,
+            listeningQuote: "If you don't like the clipper guard I'm holding, tell me. I want you to walk out smiling.",
+            specialty: "Classic Tapers & Sensory-Friendly Grooming"
+          }
+        ],
+        organicReviews: [
+          {
+            author: "Daniel R.",
+            verifiedDate: "Verified Visit • Oct 15, 2026",
+            requestedCut: "Mod-style scissors cut, tapered neck, don't touch length in back",
+            barberName: "Mateo Gomez",
+            reviewText: "I've had barbers in the past who just shave off whatever they want regardless of what I say. Mateo listened intently, took his time, and kept checking in. Honest, organic 5 stars on Strand.",
+            tags: ["Honored length in back", "Patient consultation"]
+          }
+        ]
+      }
+    ];
+
+    const HAIRSTYLE_TEMPLATES = [
+      {
+        id: "low-taper-fade",
+        name: "Low Drop Taper + Preserved Curls",
+        category: "Modern Fade",
+        photoUrl: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80",
+        defaultInstructions: "Keep top length natural. Low drop taper on temples and nape. Do not push hairline back. Leave sideburns natural."
+      },
+      {
+        id: "scissor-crop",
+        name: "Textured French Crop (Scissor Cut)",
+        category: "Scissor / Clean",
+        photoUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
+        defaultInstructions: "Cut with scissors only or #3 guard minimum on sides. Textured forward fringe, soft natural neck taper."
+      },
+      {
+        id: "curly-layering",
+        name: "Curly Shape & Hydration Cut",
+        category: "Curls & Coils",
+        photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
+        defaultInstructions: "Cut dry curl by curl. Preserve overall length. Round silhouette, remove split ends without thinning shears."
+      },
+      {
+        id: "classic-gentleman",
+        name: "Classic Side Part / Executive Taper",
+        category: "Classic Barber",
+        photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
+        defaultInstructions: "Finger length on top, taper sides with #2.5 to #1. Natural part line, no hard razor part."
+      },
+      {
+        id: "wolf-cut-shag",
+        name: "Layered Shag / Modern Wolf Cut",
+        category: "Texture & Flow",
+        photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80",
+        defaultInstructions: "Face-framing layers, curtain fringe, retain perimeter length and bulk on ends."
+      },
+      {
+        id: "beard-hair-combo",
+        name: "Skin Fade + Full Beard Lineup",
+        category: "Fade & Beard",
+        photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80",
+        defaultInstructions: "Mid skin fade, blended beard transition. Define cheek lines naturally without digging into jaw line."
+      }
+    ];
+
+    // 2. APPLICATION CONTROLLER
+    (function() {
+      'use strict';
+
+      let salons = JSON.parse(JSON.stringify(INITIAL_SALONS));
+      let userName = localStorage.getItem('strand_userName') || null;
+      let userLocation = {
+        lat: 40.7230,
+        lng: -73.9980,
+        name: "SoHo, Lower Manhattan",
+        isLiveGps: false
+      };
+      let activeDemandCard = null;
+      let activeFilter = {
+        searchQuery: "",
+        maxDistance: 5.0,
+        specialty: "all",
+        sortBy: "demandScore"
+      };
+      let map = null;
+      let markersLayer = null;
+
+      // Distance via Haversine Formula (Miles)
+      function calculateDistanceMiles(lat1, lon1, lat2, lon2) {
+        const R = 3958.8;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return parseFloat((R * c).toFixed(1));
+      }
+
+      function updateSalonDistances() {
+        salons.forEach(s => {
+          s.distanceMiles = calculateDistanceMiles(userLocation.lat, userLocation.lng, s.lat, s.lng);
+        });
+      }
+
+      function getTimeGreeting() {
+        const h = new Date().getHours();
+        if (h < 12) return "Good morning";
+        if (h < 17) return "Good afternoon";
+        return "Good evening";
+      }
+
+      // Initialize App
+      function init() {
+        loadStoredData();
+        updateSalonDistances();
+        initMap();
+        renderAll();
+        renderTemplates();
+      }
+
+      function loadStoredData() {
+        userName = localStorage.getItem('strand_userName') || null;
+        const storedLoc = localStorage.getItem('strand_userLocation');
+        if (storedLoc) {
+          try { userLocation = JSON.parse(storedLoc); } catch (e) {}
+        }
+        const storedDemand = localStorage.getItem('strand_activeDemand');
+        if (storedDemand) {
+          try { activeDemandCard = JSON.parse(storedDemand); } catch (e) {}
+        }
+        if (!activeDemandCard) {
+          activeDemandCard = {
+            id: "demand-" + Date.now(),
+            clientName: userName || "You",
+            title: "Custom Haircut Directive",
+            instructions: "Do not push hairline back. Keep top natural length. Do not use thinning shears on crowns. Show guard in mirror before cutting.",
+            hairType: "Curly (3A-3C)",
+            communicationStyle: "Consultative (Regular Checkpoints)",
+            photoUrl: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80",
+            photoLabel: "Attached Reference Cut",
+            createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          };
+        }
+      }
+
+      function renderAll() {
+        renderNavigation();
+        renderHeroBanner();
+        renderDirectiveBanner();
+        renderRecommendations();
+        renderSalonsGrid();
+        renderMapMarkers();
+        renderBookingsBadge();
+      }
+
+      function renderNavigation() {
+        const navGreeting = document.getElementById('nav-user-greeting');
+        const navLoc = document.getElementById('nav-location-label');
+        if (navGreeting) navGreeting.textContent = userName ? userName : "Set Name";
+        if (navLoc) navLoc.textContent = userLocation.name || "Nearby";
+
+        const quickInput = document.getElementById('quick-name-input');
+        if (quickInput && userName) quickInput.value = userName;
+
+        const locTag = document.getElementById('location-active-tag');
+        if (locTag) locTag.textContent = userLocation.isLiveGps ? "Live GPS Active" : (userLocation.name || "Selected Area");
+      }
+
+      function renderHeroBanner() {
+        const title = document.getElementById('hero-greeting-title');
+        const subtitle = document.getElementById('hero-greeting-subtitle');
+        const greetingWord = getTimeGreeting();
+
+        if (title) {
+          title.textContent = userName 
+            ? `${greetingWord}, ${userName} 👋` 
+            : `${greetingWord}, friend 👋`;
+        }
+        if (subtitle) {
+          subtitle.innerHTML = `Discover verified salons near <span class="font-semibold text-stone-800">${userLocation.name}</span> where barbers strictly honor your reference photo and never cut off more than requested.`;
+        }
+
+        const countEl = document.getElementById('stat-salons-count');
+        if (countEl) {
+          const filtered = getFilteredSalons();
+          countEl.textContent = filtered.length;
+        }
+      }
+
+      function renderDirectiveBanner() {
+        const container = document.getElementById('demand-banner-container');
+        if (!container || !activeDemandCard) return;
+
+        container.innerHTML = `
+          <div class="bg-beige-50 border border-stone-200/90 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-xl overflow-hidden bg-white border border-stone-200 flex-shrink-0 shadow-xs relative">
+                <img src="${activeDemandCard.photoUrl}" alt="Haircut directive photo" class="w-full h-full object-cover" />
+                <span class="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-600 rounded-full border-2 border-white" title="Photo Attached"></span>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-sage uppercase tracking-wider">Active Directive & Reference</span>
+                  <span class="text-xs text-stone-400 font-mono">${activeDemandCard.hairType}</span>
+                </div>
+                <h3 class="font-serif text-sm font-semibold text-stone-900">${activeDemandCard.title}</h3>
+                <p class="text-xs text-stone-600 line-clamp-1 italic">"${activeDemandCard.instructions}"</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+              <button onclick="window.StrandApp.openDemandCardViewModal()" class="px-3.5 py-1.5 rounded-full bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 text-xs font-medium transition shadow-xs flex items-center gap-1.5">
+                <span>📋</span> View Card
+              </button>
+              <button onclick="window.StrandApp.openDemandBuilderModal()" class="px-3.5 py-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium transition shadow-xs flex items-center gap-1.5">
+                <span>✏️</span> Edit Photo & Rules
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      function getFilteredSalons() {
+        return salons.filter(salon => {
+          if (salon.distanceMiles > activeFilter.maxDistance) return false;
+          if (activeFilter.specialty === 'recommended' && !salon.isRecommended) return false;
+          if (activeFilter.specialty === 'fades' && !salon.specialties.some(s => s.toLowerCase().includes('fade'))) return false;
+          if (activeFilter.specialty === 'curls' && !salon.specialties.some(s => s.toLowerCase().includes('curl'))) return false;
+          if (activeFilter.specialty === 'scissor' && !salon.specialties.some(s => s.toLowerCase().includes('scissor'))) return false;
+
+          if (activeFilter.searchQuery.trim() !== '') {
+            const q = activeFilter.searchQuery.toLowerCase();
+            const matchName = salon.name.toLowerCase().includes(q);
+            const matchTag = salon.tagline.toLowerCase().includes(q);
+            const matchSpec = salon.specialties.some(s => s.toLowerCase().includes(q));
+            const matchBarber = salon.barbers.some(b => b.name.toLowerCase().includes(q) || b.specialty.toLowerCase().includes(q));
+            if (!matchName && !matchTag && !matchSpec && !matchBarber) return false;
+          }
+          return true;
+        }).sort((a, b) => {
+          if (activeFilter.sortBy === 'distance') return a.distanceMiles - b.distanceMiles;
+          if (activeFilter.sortBy === 'organicRating') return b.organicRating - a.organicRating;
+          if (activeFilter.sortBy === 'reviews') return b.organicReviewCount - a.organicReviewCount;
+          return b.demandUnderstandingScore - a.demandUnderstandingScore;
+        });
+      }
+
+      function renderRecommendations() {
+        const container = document.getElementById('recommendations-spotlight');
+        if (!container) return;
+
+        const recs = salons.filter(s => s.isRecommended).sort((a,b) => a.distanceMiles - b.distanceMiles);
+        container.innerHTML = recs.map(salon => `
+          <div class="salon-card p-4 space-y-3 flex flex-col justify-between">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-warm uppercase tracking-wider">${salon.neighborhood} • ${salon.distanceMiles} mi away</span>
+                <span class="text-xs font-semibold text-emerald-800">★ ${salon.organicRating}</span>
+              </div>
+              <h3 class="font-serif text-sm font-semibold text-stone-900 leading-snug cursor-pointer hover:underline" onclick="window.StrandApp.openSalonDetails('${salon.id}')">${salon.name}</h3>
+              <p class="text-[11px] text-stone-500 line-clamp-2">${salon.recommendationReason}</p>
+            </div>
+
+            <div class="pt-2 border-t border-stone-100 flex items-center justify-between gap-2">
+              <div class="text-[11px] text-stone-600 font-medium">
+                ✂️ ${salon.demandUnderstandingScore}% Directive Match
+              </div>
+              <div class="flex gap-1.5">
+                <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 text-[11px] font-medium bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg transition" title="Google Maps Directions">🧭 Directions</a>
+                <button onclick="window.StrandApp.openBookingModal('${salon.id}')" class="px-2.5 py-1 text-[11px] font-medium bg-stone-900 hover:bg-stone-800 text-white rounded-lg transition">Book</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderSalonsGrid() {
+        const grid = document.getElementById('salons-grid');
+        const label = document.getElementById('salons-count-label');
+        if (!grid) return;
+
+        const filtered = getFilteredSalons();
+        if (label) label.textContent = `${filtered.length} Available`;
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full py-12 text-center space-y-3 bg-white border border-stone-200 rounded-2xl p-6">
+              <span class="text-3xl">🔍</span>
+              <h3 class="font-serif text-base font-medium text-stone-800">No salons found within ${activeFilter.maxDistance} miles</h3>
+              <p class="text-xs text-stone-500 max-w-sm mx-auto">Try extending your radius with the slider above or clear your specialty filter.</p>
+              <button onclick="window.StrandApp.resetFilters()" class="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-medium hover:bg-stone-800 transition">Reset All Filters</button>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = filtered.map(salon => `
+          <div class="salon-card overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="relative h-44 w-full bg-stone-100">
+                <img src="${salon.heroImage}" alt="${salon.name}" class="w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-stone-900 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-xs">
+                  ✂️ ${salon.demandUnderstandingScore}% Demand Honor Score
+                </div>
+                <div class="absolute top-3 right-3 bg-stone-900/80 backdrop-blur-sm text-white px-2 py-0.5 rounded-full text-[10px] font-medium">
+                  📍 ${salon.distanceMiles} mi
+                </div>
+                <div class="absolute bottom-3 left-3 right-3 text-white">
+                  <h3 class="font-serif text-base font-semibold leading-tight drop-shadow-sm">${salon.name}</h3>
+                  <p class="text-[11px] text-stone-200 truncate">${salon.address}</p>
+                </div>
+              </div>
+
+              <div class="p-4 space-y-3">
+                <p class="text-xs text-stone-600 line-clamp-2 leading-relaxed italic">"${salon.tagline}"</p>
+
+                <!-- Barber Spotlight -->
+                <div class="bg-stone-50 border border-stone-200/80 rounded-xl p-2.5 flex items-center gap-2.5">
+                  <img src="${salon.barbers[0].avatar}" class="w-8 h-8 rounded-full object-cover border border-stone-300" alt="${salon.barbers[0].name}" />
+                  <div class="text-[11px] overflow-hidden">
+                    <div class="font-semibold text-stone-900 truncate">${salon.barbers[0].name} (${salon.barbers[0].experience})</div>
+                    <div class="text-stone-500 truncate italic">"${salon.barbers[0].listeningQuote}"</div>
+                  </div>
+                </div>
+
+                <!-- Specialties -->
+                <div class="flex flex-wrap gap-1">
+                  ${salon.specialties.slice(0, 3).map(s => `
+                    <span class="text-[10px] bg-stone-100 text-stone-700 px-2 py-0.5 rounded-md font-medium">${s}</span>
+                  `).join('')}
+                </div>
+
+                <!-- Review snippet -->
+                <div class="text-[11px] text-stone-500 pt-1 border-t border-stone-100 flex items-center justify-between">
+                  <span class="font-medium text-emerald-800">★ ${salon.organicRating} (${salon.organicReviewCount} verified reviews)</span>
+                  <span class="text-[10px] text-stone-400">100% Organic</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Action Footer: Google Maps & Directives -->
+            <div class="p-4 pt-0 space-y-2">
+              <div class="grid grid-cols-2 gap-2">
+                <a href="${salon.googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="py-2 px-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 text-center text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5" title="View Salon on Google Maps">
+                  <span>🗺️</span> <span>Google Maps</span>
+                </a>
+                <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="py-2 px-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 text-center text-xs font-medium rounded-xl transition flex items-center justify-center gap-1.5" title="Open Turn-by-Turn GPS Directions">
+                  <span>🧭</span> <span>Directions</span>
+                </a>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="window.StrandApp.openSalonDetails('${salon.id}')" class="py-2.5 px-3 bg-white border border-stone-200 hover:border-stone-400 text-stone-800 text-xs font-medium rounded-xl transition">
+                  Details & Reviews
+                </button>
+                <button onclick="window.StrandApp.openBookingModal('${salon.id}')" class="py-2.5 px-3 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition shadow-xs flex items-center justify-center gap-1.5">
+                  <span>✂️</span> <span>Book Cut</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function initMap() {
+        const el = document.getElementById('salons-map');
+        if (!el || typeof L === 'undefined') return;
+
+        if (map) { map.remove(); }
+
+        map = L.map('salons-map', {
+          zoomControl: false,
+          scrollWheelZoom: true
+        }).setView([userLocation.lat, userLocation.lng], 14);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+          maxZoom: 19
+        }).addTo(map);
+
+        markersLayer = L.layerGroup().addTo(map);
+        renderMapMarkers();
+      }
+
+      function renderMapMarkers() {
+        if (!markersLayer || !map || typeof L === 'undefined') return;
+        markersLayer.clearLayers();
+
+        // User Pin
+        const userIcon = L.divIcon({
+          className: 'user-pin-minimal',
+          html: `<div class="user-pin-ring"></div><div class="user-pin-core"></div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+          .bindPopup(`<div class="font-medium text-stone-900 text-xs">${userName ? userName + "'s" : "Your"} Location</div><div class="text-[11px] text-stone-500">${userLocation.name}</div>`)
+          .addTo(markersLayer);
+
+        // Salon Pins
+        const filtered = getFilteredSalons();
+        filtered.forEach(salon => {
+          const customIcon = L.divIcon({
+            className: 'custom-salon-pin',
+            html: `<div class="pin-minimal-badge"><span>✂</span><span>${salon.demandUnderstandingScore}%</span></div>`,
+            iconSize: [60, 24],
+            iconAnchor: [30, 12]
+          });
+
+          L.marker([salon.lat, salon.lng], { icon: customIcon })
+            .bindPopup(`
+              <div class="p-1 max-w-[200px] space-y-1">
+                <div class="font-semibold text-stone-900 text-xs">${salon.name}</div>
+                <div class="text-[11px] text-stone-500">📍 ${salon.distanceMiles} mi away</div>
+                <div class="text-[11px] text-emerald-800 font-medium">★ ${salon.organicRating} (${salon.organicReviewCount} reviews)</div>
+                <div class="pt-1 flex gap-1">
+                  <button onclick="window.StrandApp.openSalonDetails('${salon.id}')" class="flex-1 py-1 text-[11px] bg-stone-900 text-white font-medium rounded-lg">Details</button>
+                  <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="py-1 px-2 text-[11px] border border-stone-200 text-stone-700 font-medium rounded-lg hover:bg-stone-50">🧭 Map</a>
+                </div>
+              </div>
+            `)
+            .addTo(markersLayer);
+        });
+      }
+
+      function centerMapOnUser() {
+        if (map) {
+          map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
+        }
+      }
+
+      // Quick Hero Actions
+      function saveQuickName() {
+        const inp = document.getElementById('quick-name-input');
+        if (!inp || inp.value.trim() === '') {
+          showToast("Please type your name first!");
+          return;
+        }
+        userName = inp.value.trim();
+        localStorage.setItem('strand_userName', userName);
+        if (activeDemandCard) {
+          activeDemandCard.clientName = userName;
+          localStorage.setItem('strand_activeDemand', JSON.stringify(activeDemandCard));
+        }
+        renderAll();
+        showToast(`Saved! Welcome to Strand, ${userName} 👋`);
+      }
+
+      function detectLiveGPS() {
+        const btnText = document.getElementById('quick-gps-btn-text');
+        if (btnText) btnText.textContent = "Detecting GPS...";
+
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              userLocation = {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                name: "Your Live Location",
+                isLiveGps: true
+              };
+              localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+              if (btnText) btnText.textContent = "✓ GPS Coordinates Active";
+              showToast("Live GPS coordinates detected!");
+
+              // Reverse geocoding
+              fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+                .then(r => r.json())
+                .then(d => {
+                  if (d && d.address) {
+                    const c = d.address.city || d.address.town || d.address.suburb || d.address.neighbourhood || "Nearby";
+                    userLocation.name = `${c} (Live GPS)`;
+                    localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+                    if (btnText) btnText.textContent = `✓ ${userLocation.name}`;
+                    updateSalonDistances();
+                    renderAll();
+                    if (map) map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
+                  }
+                })
+                .catch(() => {});
+
+              updateSalonDistances();
+              renderAll();
+              if (map) map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
+            },
+            err => {
+              if (btnText) btnText.textContent = "GPS Unavailable (Choose Area)";
+              showToast("Could not access GPS. Please choose a neighborhood.");
+            },
+            { timeout: 8000 }
+          );
+        } else {
+          showToast("Geolocation is not supported by your browser.");
+        }
+      }
+
+      function quickSetArea(areaKey) {
+        const areas = {
+          soho: { lat: 40.7248, lng: -73.9991, name: "SoHo, Lower Manhattan", isLiveGps: false },
+          tribeca: { lat: 40.7205, lng: -74.0042, name: "Tribeca, Lower Manhattan", isLiveGps: false },
+          bowery: { lat: 40.7219, lng: -73.9932, name: "Bowery / Lower East Side", isLiveGps: false },
+          village: { lat: 40.7259, lng: -73.9961, name: "Greenwich Village", isLiveGps: false },
+          hudson: { lat: 40.7265, lng: -74.0076, name: "Hudson Square", isLiveGps: false }
+        };
+        if (areas[areaKey]) {
+          userLocation = areas[areaKey];
+          localStorage.setItem('strand_userLocation', JSON.stringify(userLocation));
+          updateSalonDistances();
+          renderAll();
+          if (map) map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1 });
+          showToast(`Location set to ${userLocation.name}`);
+        }
+      }
+
+      function handleQuickPhotoUpload(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const dataUrl = evt.target.result;
+          if (activeDemandCard) {
+            activeDemandCard.photoUrl = dataUrl;
+            activeDemandCard.photoLabel = "Customer Uploaded Haircut";
+            localStorage.setItem('strand_activeDemand', JSON.stringify(activeDemandCard));
+          }
+
+          const thumb = document.getElementById('quick-photo-thumbnail');
+          if (thumb) thumb.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover rounded-lg" alt="Thumbnail" />`;
+
+          const status = document.getElementById('quick-photo-status');
+          if (status) status.textContent = "Photo Attached ✓";
+
+          renderDirectiveBanner();
+          showToast("Haircut reference photo attached to your directive!");
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function handleRadiusChange(val) {
+        activeFilter.maxDistance = parseFloat(val);
+        const label = document.getElementById('distance-value');
+        if (label) label.textContent = `${activeFilter.maxDistance} mi`;
+        renderSalonsGrid();
+        renderMapMarkers();
+        const count = getFilteredSalons().length;
+        const countEl = document.getElementById('stat-salons-count');
+        if (countEl) countEl.textContent = count;
+      }
+
+      function handleSearchChange(val) {
+        activeFilter.searchQuery = val;
+        renderSalonsGrid();
+        renderMapMarkers();
+      }
+
+      function handleSortChange(val) {
+        activeFilter.sortBy = val;
+        renderSalonsGrid();
+      }
+
+      function setSpecialtyFilter(type) {
+        activeFilter.specialty = type;
+        const pills = ['all', 'recommended', 'fades', 'curls', 'scissor'];
+        pills.forEach(p => {
+          const btn = document.getElementById(`pill-specialty-${p}`);
+          if (btn) {
+            if (p === type) {
+              btn.className = "px-3 py-1 rounded-full text-xs font-medium transition bg-stone-900 text-white shadow-xs";
+            } else {
+              btn.className = "px-3 py-1 rounded-full text-xs font-medium transition bg-stone-100 hover:bg-stone-200 text-stone-700";
+            }
+          }
+        });
+        renderSalonsGrid();
+        renderMapMarkers();
+      }
+
+      function resetFilters() {
+        activeFilter = { searchQuery: "", maxDistance: 10.0, specialty: "all", sortBy: "demandScore" };
+        const slider = document.getElementById('distance-slider');
+        if (slider) slider.value = "10";
+        const valLabel = document.getElementById('distance-value');
+        if (valLabel) valLabel.textContent = "10 mi";
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) searchInput.value = "";
+        setSpecialtyFilter('all');
+        showToast("Filters reset to default.");
+      }
+
+      // Modals Logic
+      function openModal(id) {
+        const m = document.getElementById(id);
+        if (m) {
+          m.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        }
+      }
+
+      function closeModal(id) {
+        const m = document.getElementById(id);
+        if (m) {
+          m.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+      }
+
+      function openWelcomeModal() {
+        const inp = document.getElementById('welcome-name-input');
+        if (inp && userName) inp.value = userName;
+        openModal('welcome-modal');
+      }
+
+      function handleWelcomeSubmit(e) {
+        e.preventDefault();
+        const inp = document.getElementById('welcome-name-input');
+        if (inp && inp.value.trim() !== '') {
+          userName = inp.value.trim();
+          localStorage.setItem('strand_userName', userName);
+          if (activeDemandCard) {
+            activeDemandCard.clientName = userName;
+            localStorage.setItem('strand_activeDemand', JSON.stringify(activeDemandCard));
+          }
+        }
+        closeModal('welcome-modal');
+        updateSalonDistances();
+        renderAll();
+        if (map) map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
+        showToast(`Welcome, ${userName || 'friend'}! Salons ranked near you.`);
+      }
+
+      function detectLiveLocationInModal() {
+        const btnText = document.getElementById('welcome-gps-btn-text');
+        if (btnText) btnText.textContent = "Requesting GPS...";
+        detectLiveGPS();
+        if (btnText) btnText.textContent = "✓ GPS Detected";
+      }
+
+      function handleWelcomeLocationSelect(key) {
+        quickSetArea(key);
+      }
+
+      // Haircut Directive Builder Modal
+      function openDemandBuilderModal() {
+        if (activeDemandCard) {
+          const inst = document.getElementById('directive-instructions');
+          if (inst) inst.value = activeDemandCard.instructions || "";
+          const ht = document.getElementById('directive-hair-type');
+          if (ht) ht.value = activeDemandCard.hairType || "Curly (3A-3C)";
+          const cs = document.getElementById('directive-comm-style');
+          if (cs) cs.value = activeDemandCard.communicationStyle || "Consultative (Regular Checkpoints)";
+
+          if (activeDemandCard.photoUrl) {
+            const previewBox = document.getElementById('modal-photo-preview-box');
+            const activeView = document.getElementById('modal-photo-active-view');
+            const activeImg = document.getElementById('modal-photo-img');
+            if (previewBox) previewBox.classList.add('hidden');
+            if (activeView) activeView.classList.remove('hidden');
+            if (activeImg) activeImg.src = activeDemandCard.photoUrl;
+          }
+        }
+        openModal('demand-builder-modal');
+      }
+
+      function handlePhotoFileChange(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const dataUrl = evt.target.result;
+          if (activeDemandCard) {
+            activeDemandCard.photoUrl = dataUrl;
+          }
+          const previewBox = document.getElementById('modal-photo-preview-box');
+          const activeView = document.getElementById('modal-photo-active-view');
+          const activeImg = document.getElementById('modal-photo-img');
+          if (previewBox) previewBox.classList.add('hidden');
+          if (activeView) activeView.classList.remove('hidden');
+          if (activeImg) activeImg.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function clearUploadedPhoto() {
+        if (activeDemandCard) {
+          activeDemandCard.photoUrl = "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80";
+        }
+        const previewBox = document.getElementById('modal-photo-preview-box');
+        const activeView = document.getElementById('modal-photo-active-view');
+        if (previewBox) previewBox.classList.remove('hidden');
+        if (activeView) activeView.classList.add('hidden');
+      }
+
+      function renderTemplates() {
+        const container = document.getElementById('templates-list-container');
+        if (!container) return;
+
+        container.innerHTML = HAIRSTYLE_TEMPLATES.map(tpl => `
+          <div onclick="window.StrandApp.applyTemplate('${tpl.id}')" class="cursor-pointer border border-stone-200 hover:border-stone-500 rounded-xl p-2 bg-stone-50/60 hover:bg-white transition space-y-1">
+            <img src="${tpl.photoUrl}" class="w-full h-16 object-cover rounded-lg border border-stone-200" alt="${tpl.name}" />
+            <div class="text-[11px] font-semibold text-stone-900 truncate">${tpl.name}</div>
+            <div class="text-[9px] text-stone-400 uppercase tracking-wider">${tpl.category}</div>
+          </div>
+        `).join('');
+      }
+
+      function applyTemplate(tplId) {
+        const tpl = HAIRSTYLE_TEMPLATES.find(t => t.id === tplId);
+        if (!tpl) return;
+
+        const inst = document.getElementById('directive-instructions');
+        if (inst) inst.value = tpl.defaultInstructions;
+
+        if (activeDemandCard) {
+          activeDemandCard.photoUrl = tpl.photoUrl;
+          activeDemandCard.title = tpl.name;
+        }
+
+        const previewBox = document.getElementById('modal-photo-preview-box');
+        const activeView = document.getElementById('modal-photo-active-view');
+        const activeImg = document.getElementById('modal-photo-img');
+        if (previewBox) previewBox.classList.add('hidden');
+        if (activeView) activeView.classList.remove('hidden');
+        if (activeImg) activeImg.src = tpl.photoUrl;
+
+        showToast(`Template "${tpl.name}" applied!`);
+      }
+
+      function handleDemandBuilderSubmit(e) {
+        e.preventDefault();
+        const inst = document.getElementById('directive-instructions');
+        const ht = document.getElementById('directive-hair-type');
+        const cs = document.getElementById('directive-comm-style');
+
+        activeDemandCard = {
+          id: activeDemandCard ? activeDemandCard.id : "demand-" + Date.now(),
+          clientName: userName || "You",
+          title: activeDemandCard && activeDemandCard.title ? activeDemandCard.title : "Custom Haircut Directive",
+          instructions: inst ? inst.value : "",
+          hairType: ht ? ht.value : "Curly (3A-3C)",
+          communicationStyle: cs ? cs.value : "Consultative (Regular Checkpoints)",
+          photoUrl: (activeDemandCard && activeDemandCard.photoUrl) ? activeDemandCard.photoUrl : "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80",
+          createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        };
+
+        localStorage.setItem('strand_activeDemand', JSON.stringify(activeDemandCard));
+        closeModal('demand-builder-modal');
+        renderDirectiveBanner();
+        showToast("Haircut directive updated successfully!");
+      }
+
+      // View Haircut Directive Card
+      function openDemandCardViewModal() {
+        const content = document.getElementById('demand-card-content');
+        if (!content || !activeDemandCard) return;
+
+        content.innerHTML = `
+          <div id="printable-demand-card" class="space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-stone-200">
+              <div class="flex items-center gap-2">
+                <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-stone-900">
+                  <circle cx="21" cy="5" r="1.3" fill="currentColor"/>
+                  <path d="M 21 5 C 16 8, 13 14, 15 19 C 17.5 24, 21 27, 20 31 C 19 33.5, 17 35, 15 36" 
+                        stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div>
+                  <h3 class="font-serif text-lg font-bold text-stone-900">Strand Haircut Directive</h3>
+                  <p class="text-[10px] text-stone-400">Strict Consultation Blueprint • Client Protected</p>
+                </div>
+              </div>
+              <button onclick="window.StrandApp.closeModal('demand-card-modal')" class="text-stone-400 hover:text-stone-800 text-lg">✕</button>
+            </div>
+
+            <!-- Client & Date -->
+            <div class="bg-stone-50 border border-stone-200 rounded-2xl p-3 flex justify-between items-center text-xs">
+              <div>
+                <span class="text-stone-400 block text-[10px] uppercase font-bold tracking-wider">Client Name</span>
+                <span class="font-bold text-stone-900 text-sm">${activeDemandCard.clientName || 'Guest Client'}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-stone-400 block text-[10px] uppercase font-bold tracking-wider">Hair Type</span>
+                <span class="font-medium text-stone-800">${activeDemandCard.hairType}</span>
+              </div>
+            </div>
+
+            <!-- Reference Photo -->
+            <div class="space-y-1.5">
+              <span class="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Attached Reference Cut</span>
+              <div class="rounded-2xl overflow-hidden border border-stone-200 bg-stone-100 max-h-64">
+                <img src="${activeDemandCard.photoUrl}" alt="Haircut Reference" class="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            <!-- Strict Instructions -->
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Directives & Boundaries (Must Honor)</span>
+              <div class="bg-stone-50 border border-stone-200 rounded-2xl p-3.5 text-xs text-stone-800 leading-relaxed font-sans">
+                ${activeDemandCard.instructions}
+              </div>
+            </div>
+
+            <!-- Barber Checkpoint Protocol -->
+            <div class="border border-amber-200 bg-amber-50/50 rounded-2xl p-3 space-y-1 text-xs">
+              <span class="font-semibold text-amber-900 flex items-center gap-1">⚠️ Mandatory Barber Checkpoints</span>
+              <ul class="text-[11px] text-amber-800 list-disc list-inside space-y-0.5">
+                <li>Show requested guard size in mirror before clipping</li>
+                <li>Preserve hairline position — do not cut backward</li>
+                <li>Check in before taking scissors to perimeter length</li>
+              </ul>
+            </div>
+
+            <!-- Actions -->
+            <div class="pt-2 flex gap-2">
+              <button onclick="window.print()" class="flex-1 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl transition shadow-sm">
+                🖨️ Print / Show Barber
+              </button>
+              <button onclick="window.StrandApp.openDemandBuilderModal(); window.StrandApp.closeModal('demand-card-modal');" class="py-2.5 px-4 border border-stone-200 text-stone-700 text-xs font-medium rounded-xl hover:bg-stone-50 transition">
+                Edit
+              </button>
+            </div>
+          </div>
+        `;
+        openModal('demand-card-modal');
+      }
+
+      // Salon Details & Reviews Modal
+      function openSalonDetails(salonId) {
+        const salon = salons.find(s => s.id === salonId);
+        if (!salon) return;
+
+        const content = document.getElementById('salon-details-content');
+        if (!content) return;
+
+        content.innerHTML = `
+          <div class="relative h-48 w-full bg-stone-100">
+            <img src="${salon.heroImage}" class="w-full h-full object-cover" alt="${salon.name}" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+            <button onclick="window.StrandApp.closeModal('salon-details-modal')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center text-sm hover:bg-black">✕</button>
+            <div class="absolute bottom-4 left-6 right-6 text-white">
+              <h2 class="font-serif text-xl font-bold">${salon.name}</h2>
+              <p class="text-xs text-stone-200">${salon.address} &bull; ${salon.phone}</p>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+              <div>
+                <span class="text-emerald-800 font-bold text-sm">★ ${salon.organicRating}</span>
+                <span class="text-xs text-stone-400">(${salon.organicReviewCount} verified organic reviews)</span>
+              </div>
+              <div class="text-xs font-semibold px-2.5 py-1 rounded-full badge-sage">
+                ✂️ ${salon.demandUnderstandingScore}% Demand Honor Score
+              </div>
+            </div>
+
+            <!-- Google Maps Direct Links -->
+            <div class="grid grid-cols-2 gap-3">
+              <a href="${salon.googleMapsUrl}" target="_blank" rel="noopener noreferrer" class="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2">
+                <span>🗺️</span> View on Google Maps
+              </a>
+              <a href="${salon.googleDirectionsUrl}" target="_blank" rel="noopener noreferrer" class="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 text-center text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2">
+                <span>🧭</span> Turn-by-Turn Directions
+              </a>
+            </div>
+
+            <!-- Barbers -->
+            <div class="space-y-2">
+              <h4 class="text-xs font-bold text-stone-900 uppercase tracking-wider">Lead Barbers Audited for Listening</h4>
+              <div class="space-y-2">
+                ${salon.barbers.map(b => `
+                  <div class="border border-stone-200 rounded-2xl p-3 flex items-center justify-between bg-stone-50/50">
+                    <div class="flex items-center gap-3">
+                      <img src="${b.avatar}" class="w-10 h-10 rounded-full object-cover border border-stone-300" alt="${b.name}" />
+                      <div>
+                        <div class="font-semibold text-xs text-stone-900">${b.name} <span class="text-stone-400 font-normal">(${b.experience})</span></div>
+                        <div class="text-[11px] text-stone-500 italic">"${b.listeningQuote}"</div>
+                      </div>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-800">${b.demandScore}%</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Organic Reviews -->
+            <div class="space-y-2">
+              <h4 class="text-xs font-bold text-stone-900 uppercase tracking-wider">Verified Customer Reviews</h4>
+              <div class="space-y-3">
+                ${salon.organicReviews.map(r => `
+                  <div class="border border-stone-200 rounded-2xl p-3.5 space-y-1.5 bg-white">
+                    <div class="flex items-center justify-between">
+                      <span class="font-semibold text-xs text-stone-900">${r.author}</span>
+                      <span class="text-[10px] text-stone-400">${r.verifiedDate}</span>
+                    </div>
+                    <div class="text-[11px] text-stone-500 font-medium">Barber: ${r.barberName} &bull; Requested: "${r.requestedCut}"</div>
+                    <p class="text-xs text-stone-700 leading-relaxed">${r.reviewText}</p>
+                    <div class="flex flex-wrap gap-1 pt-1">
+                      ${r.tags.map(t => `<span class="text-[9px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded font-medium">✓ ${t}</span>`).join('')}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="pt-2 flex gap-3">
+              <button onclick="window.StrandApp.openBookingModal('${salon.id}'); window.StrandApp.closeModal('salon-details-modal');" class="flex-1 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold transition shadow-md">
+                Book Cut with My Directive Attached
+              </button>
+            </div>
+          </div>
+        `;
+        openModal('salon-details-modal');
+      }
+
+      // Booking Flow
+      function openBookingModal(salonId) {
+        const salon = salons.find(s => s.id === salonId) || salons[0];
+        const content = document.getElementById('booking-modal-content');
+        if (!content) return;
+
+        content.innerHTML = `
+          <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+            <div>
+              <h3 class="font-serif text-lg font-medium text-stone-900">Book at ${salon.name}</h3>
+              <p class="text-xs text-stone-400">Directive & photo automatically transmitted</p>
+            </div>
+            <button onclick="window.StrandApp.closeModal('booking-modal')" class="text-stone-400 hover:text-stone-800 text-lg">✕</button>
+          </div>
+
+          <form onsubmit="window.StrandApp.handleBookingSubmit(event, '${salon.id}')" class="space-y-4 mt-4 text-xs">
+            <!-- Attached Reference Photo Preview -->
+            <div class="bg-stone-50 border border-stone-200 rounded-xl p-2.5 flex items-center gap-3">
+              <img src="${activeDemandCard.photoUrl}" class="w-10 h-10 object-cover rounded-lg border border-stone-200 flex-shrink-0" alt="Cut preview" />
+              <div class="overflow-hidden">
+                <span class="font-semibold text-stone-900 block text-xs">Haircut Directive Attached ✓</span>
+                <span class="text-[10px] text-stone-500 truncate block">${activeDemandCard.instructions}</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-stone-700 mb-1">Select Barber</label>
+              <select id="book-barber" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-900">
+                ${salon.barbers.map(b => `<option value="${b.name}">${b.name} — ${b.title} (${b.demandScore}% Score)</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-stone-700 mb-1">Appointment Date</label>
+                <input type="date" id="book-date" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-900" required />
+              </div>
+              <div>
+                <label class="block font-semibold text-stone-700 mb-1">Time Slot</label>
+                <select id="book-time" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-900">
+                  <option value="10:00 AM">10:00 AM</option>
+                  <option value="11:30 AM">11:30 AM</option>
+                  <option value="1:00 PM">1:00 PM</option>
+                  <option value="3:30 PM">3:30 PM</option>
+                  <option value="5:00 PM">5:00 PM</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-stone-700 mb-1">Your Full Name</label>
+              <input type="text" id="book-name" value="${userName || ''}" placeholder="Full name for salon reception" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-900" required />
+            </div>
+
+            <div>
+              <label class="block font-semibold text-stone-700 mb-1">Phone Number</label>
+              <input type="tel" id="book-phone" placeholder="(555) 000-0000" class="w-full bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-xs text-stone-900" required />
+            </div>
+
+            <div class="pt-2">
+              <button type="submit" class="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold transition shadow-md">
+                Confirm Booking with Directive Guarantee
+              </button>
+            </div>
+          </form>
+        `;
+
+        // Set default date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dateInput = document.getElementById('book-date');
+        if (dateInput) dateInput.value = tomorrow.toISOString().split('T')[0];
+
+        openModal('booking-modal');
+      }
+
+      function handleBookingSubmit(e, salonId) {
+        e.preventDefault();
+        const salon = salons.find(s => s.id === salonId);
+        const barber = document.getElementById('book-barber').value;
+        const date = document.getElementById('book-date').value;
+        const time = document.getElementById('book-time').value;
+        const name = document.getElementById('book-name').value;
+        const phone = document.getElementById('book-phone').value;
+
+        const newBooking = {
+          id: "bk-" + Date.now(),
+          salonName: salon.name,
+          salonAddress: salon.address,
+          barberName: barber,
+          date,
+          time,
+          clientName: name,
+          phone,
+          photoUrl: activeDemandCard.photoUrl,
+          instructions: activeDemandCard.instructions,
+          status: "Confirmed"
+        };
+
+        const existing = JSON.parse(localStorage.getItem('strand_bookings') || '[]');
+        existing.unshift(newBooking);
+        localStorage.setItem('strand_bookings', JSON.stringify(existing));
+
+        closeModal('booking-modal');
+        renderBookingsBadge();
+        showToast(`Appointment confirmed at ${salon.name} for ${date} at ${time}!`);
+      }
+
+      function renderBookingsBadge() {
+        const bookings = JSON.parse(localStorage.getItem('strand_bookings') || '[]');
+        const badge = document.getElementById('bookings-count-badge');
+        if (badge) {
+          if (bookings.length > 0) {
+            badge.textContent = bookings.length;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      }
+
+      function openBookingsModal() {
+        const bookings = JSON.parse(localStorage.getItem('strand_bookings') || '[]');
+        const container = document.getElementById('bookings-list-content');
+        if (!container) return;
+
+        if (bookings.length === 0) {
+          container.innerHTML = `
+            <div class="py-8 text-center space-y-2">
+              <span class="text-3xl">📅</span>
+              <p class="text-xs text-stone-500">No scheduled appointments yet.</p>
+              <button onclick="window.StrandApp.closeModal('bookings-modal')" class="px-3.5 py-1.5 bg-stone-900 text-white rounded-xl text-xs font-medium">Browse Salons</button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = bookings.map(b => `
+            <div class="border border-stone-200 rounded-2xl p-3.5 space-y-2 bg-stone-50/50">
+              <div class="flex items-center justify-between">
+                <span class="font-serif font-bold text-sm text-stone-900">${b.salonName}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full badge-sage">Confirmed</span>
+              </div>
+              <div class="text-xs text-stone-600">
+                📅 <strong>${b.date}</strong> at <strong>${b.time}</strong> with <strong>${b.barberName}</strong>
+              </div>
+              <div class="flex items-center gap-2 pt-1">
+                <img src="${b.photoUrl}" class="w-8 h-8 rounded-lg object-cover border border-stone-200" alt="Preview" />
+                <span class="text-[11px] text-stone-500 italic truncate">Directive attached</span>
+              </div>
+              <div class="pt-1 flex justify-end">
+                <button onclick="window.StrandApp.cancelBooking('${b.id}')" class="text-xs text-red-600 hover:underline">Cancel Booking</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        openModal('bookings-modal');
+      }
+
+      function cancelBooking(id) {
+        let bookings = JSON.parse(localStorage.getItem('strand_bookings') || '[]');
+        bookings = bookings.filter(b => b.id !== id);
+        localStorage.setItem('strand_bookings', JSON.stringify(bookings));
+        renderBookingsBadge();
+        openBookingsModal();
+        showToast("Appointment cancelled.");
+      }
+
+      // Minimalist Toast
+      function showToast(msg) {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toast-message');
+        if (!toast || !msgEl) return;
+
+        msgEl.textContent = msg;
+        toast.classList.remove('translate-y-8', 'opacity-0', 'pointer-events-none');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
+        setTimeout(() => {
+          toast.classList.remove('translate-y-0', 'opacity-100');
+          toast.classList.add('translate-y-8', 'opacity-0', 'pointer-events-none');
+        }, 3200);
+      }
+
+      // Public API
+      window.StrandApp = {
+        init,
+        saveQuickName,
+        detectLiveGPS,
+        quickSetArea,
+        handleQuickPhotoUpload,
+        handleRadiusChange,
+        handleSearchChange,
+        handleSortChange,
+        setSpecialtyFilter,
+        resetFilters,
+        centerMapOnUser,
+        openModal,
+        closeModal,
+        openWelcomeModal,
+        handleWelcomeSubmit,
+        detectLiveLocationInModal,
+        handleWelcomeLocationSelect,
+        openDemandBuilderModal,
+        handlePhotoFileChange,
+        clearUploadedPhoto,
+        applyTemplate,
+        handleDemandBuilderSubmit,
+        openDemandCardViewModal,
+        openSalonDetails,
+        openBookingModal,
+        handleBookingSubmit,
+        openBookingsModal,
+        cancelBooking
+      };
+
+      // Ensure execution regardless of load timing
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
 </body>
 </html>

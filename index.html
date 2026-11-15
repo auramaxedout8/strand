@@ -106,6 +106,9 @@
       background: #f7f4ef !important;
       border-radius: 16px;
     }
+    .leaflet-tile {
+      filter: saturate(0.85) brightness(1.02) contrast(0.96);
+    }
     .user-pin-minimal {
       position: relative;
       width: 24px;
@@ -380,6 +383,9 @@
         </div>
         <div class="flex items-center gap-2">
           <button onclick="window.StrandApp.centerMapOnUser()" class="text-xs text-stone-600 hover:text-stone-900 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition">Center on Me</button>
+          <a id="external-google-maps-link" href="https://www.google.com/maps/search/salons+near+SoHo+New+York" target="_blank" rel="noopener noreferrer" class="text-xs text-stone-700 hover:text-stone-950 font-medium px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 transition flex items-center gap-1">
+            <span>🗺️ Google Maps</span>
+          </a>
         </div>
       </div>
       <div id="salons-map" class="w-full h-64 sm:h-72 rounded-xl border border-stone-200/90 shadow-inner"></div>
@@ -1092,6 +1098,11 @@
 
         const locTag = document.getElementById('location-active-tag');
         if (locTag) locTag.textContent = userLocation.isLiveGps ? "Live GPS Active" : (userLocation.name || "Selected Area");
+
+        const gLink = document.getElementById('external-google-maps-link');
+        if (gLink) {
+          gLink.href = `https://www.google.com/maps/search/salons+barbers+near+${encodeURIComponent(userLocation.name)}`;
+        }
       }
 
       function renderHeroBanner() {
@@ -1302,8 +1313,8 @@
           scrollWheelZoom: true
         }).setView([userLocation.lat, userLocation.lng], 14);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; OpenStreetMap &copy; CARTO',
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
           maxZoom: 19
         }).addTo(map);
 
